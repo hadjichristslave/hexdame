@@ -65,13 +65,13 @@ public class PanelRules {
             int positionX = c.i;
             int positionY = c.j;
             if(c.C== Color.black){
-                System.out.println("left move" +getMovingPositions(new Point(positionX, positionY), Color.black, Movement.LEFT));
-                System.out.println("right move" +getMovingPositions(new Point(positionX, positionY), Color.black, Movement.RIGHT));
-                System.out.println("forward move" +getMovingPositions(new Point(positionX, positionY), Color.black, Movement.FORWARD));
+                getMovingPositions(new Point(positionX, positionY), Color.black, Movement.LEFT);
+                getMovingPositions(new Point(positionX, positionY), Color.black, Movement.RIGHT);
+                getMovingPositions(new Point(positionX, positionY), Color.black, Movement.FORWARD);
             }else if(c.C == Color.red){
-                System.out.println("left move " +getMovingPositions(new Point(positionX, positionY), Color.red, Movement.LEFT));
-                System.out.println("right move " +getMovingPositions(new Point(positionX, positionY), Color.red, Movement.RIGHT));
-                System.out.println("forward move" +getMovingPositions(new Point(positionX, positionY), Color.red, Movement.FORWARD));
+                getMovingPositions(new Point(positionX, positionY), Color.red, Movement.LEFT);
+                getMovingPositions(new Point(positionX, positionY), Color.red, Movement.RIGHT);
+                getMovingPositions(new Point(positionX, positionY), Color.red, Movement.FORWARD);
             }
             return legalMoves;
         }

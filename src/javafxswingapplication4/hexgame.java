@@ -28,9 +28,10 @@ public class hexgame
     ArrayList<Soldier> gamePieces = new ArrayList<Soldier>();
     
     PanelRules pr;
-    enum turnz {RED, BLACK};
-    public turnz turn;
+    enum turn {RED, BLACK};
+    public turn CurrentTurn;
     ArrayList moves = new ArrayList<Point>();
+    Point currentSelection = new Point();
     
         private hexgame() {
                 
@@ -65,7 +66,7 @@ public class hexgame
 	int[][] board = new int[BSIZE][BSIZE];
  
 	void initGame(){
-                turn = turnz.BLACK;
+                CurrentTurn = turn.BLACK;
 		hexmech.setXYasVertex(false); //RECOMMENDED: leave this as FALSE. 
 		hexmech.setHeight(HEXSIZE); //Either setHeight or setSize must be run to initialize the hex
 		hexmech.setBorders(BORDERS);
@@ -202,14 +203,13 @@ public class hexgame
 
  
 		class MyMouseListener extends MouseAdapter  {	//inner class inside DrawingPanel 
-                    
                         @Override
-			public void mouseClicked(MouseEvent e) {
-                            moves.clear();
+                        public void mouseClicked(MouseEvent e) {
                             ArrayList<Point> legalMoves;
-			    Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );
-                            
+                            Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );
                             if(PanelRules.containsSoldier(new Soldier(p.x, p.y, Color.black) , gamePieces)){
+                                moves.clear();
+                                currentSelection = p;
                                 legalMoves = pr.getMovingPositions(p.x, p.y, Color.black);
                                 if(legalMoves.size()>0){
                                  for(int i = 0;i<legalMoves.size();i++){
@@ -217,9 +217,26 @@ public class hexgame
                                       moves.add(nextMove);
                                     }
                                 }
+                            }else if(PanelRules.containsSoldier(new Soldier(currentSelection.x, currentSelection.y, Color.black),gamePieces)){
+                                // if p belongs to legal moves, change the soldier position in the array
+                                System.out.println("Moves contains?");
+                                System.out.println(moves.contains(p));
+                                System.out.println(currentSelection.toString());
+                                for(int i=0;i<gamePieces.size();i++){
+                                    if(gamePieces.get(i).i==currentSelection.x &&gamePieces.get(i).j==currentSelection.y){
+                                        gamePieces.get(i).i = p.x;
+                                        gamePieces.get(i).j = p.y;
+                                        moves.clear();
+                                        currentSelection = new Point(0,0);
+                                    }
+                                    
+                                }
+                                
+                                         
                             }
+                            
                             repaint();                            
-			}
+                        }
                         @Override
                         public void mousePressed(MouseEvent e) { 
 //                            deleteX   = e.getX();

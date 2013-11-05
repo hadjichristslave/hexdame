@@ -164,7 +164,7 @@ The hexagon is drawn in the colour specified in hexgame.COLOURELL.
 		if (n < 0) {
 			g2.setColor(hexgame.COLOURONE);
 			g2.fillPolygon(hex(x,y));
-			g2.setColor(hexgame.COLOURONETXT);
+			g2.setColor(Color.PINK);
 			c = (char)(-n);
 			g2.drawString(""+d, x+r+BORDERS, y+r+BORDERS+4);
 		}
