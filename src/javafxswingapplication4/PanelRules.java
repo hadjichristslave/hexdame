@@ -61,12 +61,16 @@ public class PanelRules {
             return false;
         }
         public boolean isEmpty(Soldier test, ArrayList<Soldier> gamePiece){
-            for (int i=0;i<gamePiece.size();i++){
-                if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j){
+            for (int i=0;i<gamePiece.size();i++)
+                if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j)
                     return false;
-                }
-            }
             return true;
+        }
+        public boolean isLegalMove(Point p , ArrayList<Point> poitnlist){
+            for (int i=0;i<poitnlist.size();i++)
+                if(p.x == poitnlist.get(i).x && p.y == poitnlist.get(i).y)
+                    return true;
+            return false;
         }
          
         /*
@@ -74,6 +78,24 @@ public class PanelRules {
          * if the soldier is a king, then both directions will be checked
          */
         public ArrayList<Point> getLegalMoves(Soldier c){
+            ArrayList<Point> legalMoves = new ArrayList<Point>();
+            if(!containsSoldier(c, gamePieces)) 
+                return legalMoves;
+            
+            int positionX = c.i;
+            int positionY = c.j;
+            if(c.C== Color.black){
+                getMovingPositions(new Point(positionX, positionY), Color.black, Movement.LEFT);
+                getMovingPositions(new Point(positionX, positionY), Color.black, Movement.RIGHT);
+                getMovingPositions(new Point(positionX, positionY), Color.black, Movement.FORWARD);
+            }else if(c.C == Color.red){
+                getMovingPositions(new Point(positionX, positionY), Color.red, Movement.LEFT);
+                getMovingPositions(new Point(positionX, positionY), Color.red, Movement.RIGHT);
+                getMovingPositions(new Point(positionX, positionY), Color.red, Movement.FORWARD);
+            }
+            return legalMoves;
+        }
+        public ArrayList<Point> getJumpMoves(Soldier c){
             ArrayList<Point> legalMoves = new ArrayList<Point>();
             if(!containsSoldier(c, gamePieces)) 
                 return legalMoves;
@@ -131,7 +153,7 @@ public class PanelRules {
                   return new Point(0,0);
             return new Point(0,0);
         }
-        public Point getCapturePositions(Point c , Color color , Movement m){
+        public Point getJumpPositions(Point c , Color color , Movement m){
             Orientation or = color==Color.black?Orientation.DOWN:Orientation.UP;
             Color oposite  = color==Color.black?Color.black:Color.red;
             Point soldierPoint = getXandYgivenOrientation(c, or, m);

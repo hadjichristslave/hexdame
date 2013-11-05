@@ -213,14 +213,8 @@ public class hexgame
                                       moves.add(nextMove);
                                     }
                                 }
-                            }else if(pr.containsSoldier(new Soldier(currentSelection.x, currentSelection.y, colorTurn),gamePieces)){
-                                if(pr.isEmpty(new Soldier(p.x, p.y, invcolorTurn),gamePieces)){
-                                    
-                                // if p belongs to legal moves, change the soldier position in the array
-                                    System.out.println("PR contains?");
-                                    System.out.println(p.toString() + pr.containsSoldier(new Soldier(p.x, p.y, invcolorTurn),gamePieces));
-                                    System.out.println(p.toString() + pr.containsSoldier(new Soldier(p.x, p.y, colorTurn),gamePieces));
-                                     
+                            }else if(  pr.containsSoldier(new Soldier(currentSelection.x, currentSelection.y, colorTurn),gamePieces)
+                                    && pr.isLegalMove(new Point(p.x, p.y),moves)){
                                     for(int i=0;i<gamePieces.size();i++){
                                         if(gamePieces.get(i).i==currentSelection.x &&gamePieces.get(i).j==currentSelection.y){
                                             gamePieces.get(i).i = p.x;
@@ -228,11 +222,9 @@ public class hexgame
                                             pr.updatePieces(gamePieces);
                                             moves.clear();
                                             currentSelection = new Point(0,0);
-                                            
                                             CurrentTurn = CurrentTurn==CurrentTurn.BLACK?CurrentTurn.RED:CurrentTurn.BLACK;
                                             }
                                         }
-                                    }
                                 }
                             
                             repaint();                            
