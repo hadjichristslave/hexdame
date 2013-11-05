@@ -12,6 +12,7 @@ import java.awt.*;
 import javax.swing.*;
 import java.awt.event.*; 
 import java.util.ArrayList;
+import java.util.Iterator;
  
 /**********************************
   This is the main class of a Java program to play a game based on hexagonal tiles.
@@ -29,7 +30,7 @@ public class hexgame
     PanelRules pr;
     enum turnz {RED, BLACK};
     public turnz turn;
-    ArrayList moveLines = new ArrayList<Point>();
+    ArrayList moves = new ArrayList<Point>();
     
         private hexgame() {
                 
@@ -83,6 +84,7 @@ public class hexgame
 		//JFrame.setDefaultLookAndFeelDecorated(true);
 		JFrame frame = new JFrame("Hex Testing 4");
 		frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+                
 		Container content = frame.getContentPane();
                 content.add(panel);
                                 
@@ -155,7 +157,7 @@ public class hexgame
 			for (int i=0;i<BSIZE;i++) 
 				for (int j=0;j<BSIZE;j++) 
                                      if( PanelRules.isValidSquare(i, j) )
-					hexmech.fillHex(i,j,board[i][j],g2 , i+ " "+ j);			                   	
+					hexmech.fillHex(i,j,board[i][j],g2 , i+ " "+ j);
 			
                         //fill in the soldiers for both sides
 			for (int i=0;i<BSIZE;i++)
@@ -170,19 +172,19 @@ public class hexgame
                                         
                                     }
                         //create legal moves
+//                        for (int i=0;i<BSIZE;i++) 
+//				for (int j=0;j<BSIZE;j++) 
+//                                         if(PanelRules.containsSoldier(new Soldier(i, j, Color.black), gamePieces))
+//                                                for(Point p:pr.getMovingPositions(i,j, Color.black))
+//                                                    moves.add(p);                                            
+                                         
+                       // Draw Legal Moves
                         for (int i=0;i<BSIZE;i++) 
 				for (int j=0;j<BSIZE;j++) 
-                                     if( PanelRules.isValidSquare(i, j) ){
-                                         if(PanelRules.containsSoldier(new Soldier(i, j, Color.black), gamePieces)){
-                                            try {
-                                                System.out.println("Positions for i and j color black " +i + " " + j);
-                                                System.out.println(pr.getMovingPositions(i,j, Color.black));
-                                            }catch(Exception e){
-                                                
-                                            }
-                                         }
-                                     }
-					
+                                    for(Iterator<Point> m=moves.iterator(); m.hasNext(); ){
+                                        Point temp = m.next();
+                                        hexmech.fillHex(temp.x,temp.y,-15,g2 ,"");
+                                    }
 			
 		}
                 @Override
@@ -203,36 +205,45 @@ public class hexgame
                     
                         @Override
 			public void mouseClicked(MouseEvent e) {
-				Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );
-				//if (p.x < 0 || p.y < 0 || p.x >= BSIZE || p.y >= BSIZE) return;
-				//board[p.x][p.y] = (int) p.y;
-                                //repaint();
+                            moves.clear();
+                            ArrayList<Point> legalMoves;
+			    Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );
                             
+                            if(PanelRules.containsSoldier(new Soldier(p.x, p.y, Color.black) , gamePieces)){
+                                legalMoves = pr.getMovingPositions(p.x, p.y, Color.black);
+                                if(legalMoves.size()>0){
+                                 for(int i = 0;i<legalMoves.size();i++){
+                                      Point nextMove = (Point) legalMoves.get(i);
+                                      moves.add(nextMove);
+                                    }
+                                }
+                            }
+                            repaint();                            
 			}
                         @Override
                         public void mousePressed(MouseEvent e) { 
-                            deleteX   = e.getX();
-                            deleteY   = e.getY();
-                            Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );
+//                            deleteX   = e.getX();
+//                            deleteY   = e.getY();
+//                            Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );
+//                            
+//                            System.out.println("eventx and y" + e.getX() + " " + e.getY());
+//                            if(PanelRules.containsSoldier(new Soldier(p.x, p.y, Color.black) , gamePieces))
+//                                pr.getLegalMoves(new Soldier(p.x, p.y, Color.black));
+//                            if(PanelRules.containsSoldier(new Soldier(p.x, p.y, Color.red) , gamePieces))
+//                                pr.getLegalMoves(new Soldier(p.x, p.y, Color.red));
                             
-                            System.out.println("eventx and y" + e.getX() + " " + e.getY());
-                            if(PanelRules.containsSoldier(new Soldier(p.x, p.y, Color.black) , gamePieces))
-                                pr.getLegalMoves(new Soldier(p.x, p.y, Color.black));
-                            if(PanelRules.containsSoldier(new Soldier(p.x, p.y, Color.red) , gamePieces))
-                                pr.getLegalMoves(new Soldier(p.x, p.y, Color.red));
-                            repaint();
                         }
                         @Override
                         public void mouseReleased(MouseEvent e) {
-                            drawX   = e.getX();
-                            drawY   = e.getY();
-                            Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );
-                            if(PanelRules.containsSoldier(new Soldier(p.x, p.y, Color.black), gamePieces)){
-                                System.out.println("Black Pawn ReleaseDetected");
-                            }if(PanelRules.containsSoldier(new Soldier(p.x, p.y, Color.red),gamePieces)){
-                                System.out.println("Red Pawn Release  Detected");
-                            }
-                            repaint();
+//                            drawX   = e.getX();
+//                            drawY   = e.getY();
+//                            Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );
+//                            if(PanelRules.containsSoldier(new Soldier(p.x, p.y, Color.black), gamePieces)){
+//                                System.out.println("Black Pawn ReleaseDetected");
+//                            }if(PanelRules.containsSoldier(new Soldier(p.x, p.y, Color.red),gamePieces)){
+//                                System.out.println("Red Pawn Release  Detected");
+//                            }
+                            
                         }
                         
 		} //end of MyMouseListener class 

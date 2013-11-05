@@ -86,13 +86,20 @@ public class PanelRules {
             ArrayList<Point> mp = new ArrayList<Point>();
             Point temp;
             temp = getMovingPositions(new Point(positionX, positionY), col, Movement.LEFT);
-            if( temp.x!=0 && temp.y!=0)
-                mp.add(temp);    
-            temp =getMovingPositions(new Point(positionX, positionY), col, Movement.RIGHT);
-            if( temp.x!=0 && temp.y!=0)
+            System.out.println(temp);
+            if( temp.x!=0 || temp.y!=0)
                 mp.add(temp);
+            
+            temp =getMovingPositions(new Point(positionX, positionY), col, Movement.RIGHT);
+            System.out.println(temp);
+            if( temp.x!=0 || temp.y!=0)
+                mp.add(temp);
+            
             temp =getMovingPositions(new Point(positionX, positionY), col , Movement.FORWARD);
-           
+            System.out.println(temp);
+            if( temp.x!=0 || temp.y!=0)
+                mp.add(temp);
+                 
             return mp;
             
         }
