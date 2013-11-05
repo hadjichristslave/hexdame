@@ -22,7 +22,7 @@ public class PanelRules {
      public PanelRules(ArrayList<Soldier> gamePieces){
          this.gamePieces = gamePieces;
      }
-     public void updatePanelRules(ArrayList<Soldier> gamePieces){
+     public void updatePieces(ArrayList<Soldier> gamePieces){
          this.gamePieces = gamePieces;
      }
      public static boolean isValidSquare(int i, int j){
@@ -47,15 +47,28 @@ public class PanelRules {
                 return true;
             return false;
         }
-        public static boolean containsSoldier(Soldier test, ArrayList<Soldier> gamePieces){
-            Iterator<Soldier> soldIter = gamePieces.iterator();
-            while(soldIter.hasNext()){
-              Soldier  obj = soldIter.next();
-              if(test.i == obj.i && test.j == obj.j && test.C == obj.C)
+        /*
+         *Self explanatory function
+         *
+         *
+         */
+        public boolean containsSoldier(Soldier test, ArrayList<Soldier> gamePiece){
+            for (int i=0;i<gamePiece.size();i++){
+                if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j && test.C.equals(gamePiece.get(i).C)){
                     return true;
+                }
             }
             return false;
         }
+        public boolean isEmpty(Soldier test, ArrayList<Soldier> gamePiece){
+            for (int i=0;i<gamePiece.size();i++){
+                if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j){
+                    return false;
+                }
+            }
+            return true;
+        }
+         
         /*
          * All you need for the legal moves is the color of the soldier to be moved
          * if the soldier is a king, then both directions will be checked

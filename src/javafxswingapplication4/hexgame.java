@@ -166,9 +166,9 @@ public class hexgame
                                     if( PanelRules.isValidSquare(i, j)){                                     
                                         Soldier Sold1 = new Soldier(i , j , Color.black);
                                         Soldier Sold2 = new Soldier(i , j , Color.red);
-                                        if(PanelRules.containsSoldier(Sold1, gamePieces))
+                                        if(pr.containsSoldier(Sold1, gamePieces))
                                             hexmech.fillcircle(i,j,g2,Sold1.C);
-                                        else if((PanelRules.containsSoldier(Sold2, gamePieces)))
+                                        else if((pr.containsSoldier(Sold2, gamePieces)))
                                             hexmech.fillcircle(i,j,g2,Sold2.C);   
                                     }
                                          
@@ -203,7 +203,7 @@ public class hexgame
                             Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
                             Color invcolorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
                             
-                            if(PanelRules.containsSoldier(new Soldier(p.x, p.y, colorTurn) , gamePieces)){
+                            if(pr.containsSoldier(new Soldier(p.x, p.y, colorTurn) , gamePieces)){
                                 moves.clear();
                                 currentSelection = p;
                                 legalMoves = pr.getMovingPositions(p.x, p.y, colorTurn);
@@ -213,18 +213,22 @@ public class hexgame
                                       moves.add(nextMove);
                                     }
                                 }
-                            }else if(PanelRules.containsSoldier(new Soldier(currentSelection.x, currentSelection.y, colorTurn),gamePieces)){
-                                if(!PanelRules.containsSoldier(new Soldier(p.x, p.y, invcolorTurn),gamePieces)){
+                            }else if(pr.containsSoldier(new Soldier(currentSelection.x, currentSelection.y, colorTurn),gamePieces)){
+                                if(pr.isEmpty(new Soldier(p.x, p.y, invcolorTurn),gamePieces)){
+                                    
                                 // if p belongs to legal moves, change the soldier position in the array
-                                    System.out.println("Moves contains?");
-                                    System.out.println(moves.contains(p));
-                                    System.out.println(currentSelection.toString());
+                                    System.out.println("PR contains?");
+                                    System.out.println(p.toString() + pr.containsSoldier(new Soldier(p.x, p.y, invcolorTurn),gamePieces));
+                                    System.out.println(p.toString() + pr.containsSoldier(new Soldier(p.x, p.y, colorTurn),gamePieces));
+                                     
                                     for(int i=0;i<gamePieces.size();i++){
                                         if(gamePieces.get(i).i==currentSelection.x &&gamePieces.get(i).j==currentSelection.y){
                                             gamePieces.get(i).i = p.x;
                                             gamePieces.get(i).j = p.y;
+                                            pr.updatePieces(gamePieces);
                                             moves.clear();
                                             currentSelection = new Point(0,0);
+                                            
                                             CurrentTurn = CurrentTurn==CurrentTurn.BLACK?CurrentTurn.RED:CurrentTurn.BLACK;
                                             }
                                         }
