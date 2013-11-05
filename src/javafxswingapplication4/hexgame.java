@@ -169,15 +169,8 @@ public class hexgame
                                         if(PanelRules.containsSoldier(Sold1, gamePieces))
                                             hexmech.fillcircle(i,j,g2,Sold1.C);
                                         else if((PanelRules.containsSoldier(Sold2, gamePieces)))
-                                            hexmech.fillcircle(i,j,g2,Sold2.C);
-                                        
+                                            hexmech.fillcircle(i,j,g2,Sold2.C);   
                                     }
-                        //create legal moves
-//                        for (int i=0;i<BSIZE;i++) 
-//				for (int j=0;j<BSIZE;j++) 
-//                                         if(PanelRules.containsSoldier(new Soldier(i, j, Color.black), gamePieces))
-//                                                for(Point p:pr.getMovingPositions(i,j, Color.black))
-//                                                    moves.add(p);                                            
                                          
                        // Draw Legal Moves
                         for (int i=0;i<BSIZE;i++) 
@@ -207,33 +200,36 @@ public class hexgame
                         public void mouseClicked(MouseEvent e) {
                             ArrayList<Point> legalMoves;
                             Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );
-                            if(PanelRules.containsSoldier(new Soldier(p.x, p.y, Color.black) , gamePieces)){
+                            Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
+                            Color invcolorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
+                            
+                            if(PanelRules.containsSoldier(new Soldier(p.x, p.y, colorTurn) , gamePieces)){
                                 moves.clear();
                                 currentSelection = p;
-                                legalMoves = pr.getMovingPositions(p.x, p.y, Color.black);
+                                legalMoves = pr.getMovingPositions(p.x, p.y, colorTurn);
                                 if(legalMoves.size()>0){
                                  for(int i = 0;i<legalMoves.size();i++){
                                       Point nextMove = (Point) legalMoves.get(i);
                                       moves.add(nextMove);
                                     }
                                 }
-                            }else if(PanelRules.containsSoldier(new Soldier(currentSelection.x, currentSelection.y, Color.black),gamePieces)){
+                            }else if(PanelRules.containsSoldier(new Soldier(currentSelection.x, currentSelection.y, colorTurn),gamePieces)){
+                                if(!PanelRules.containsSoldier(new Soldier(p.x, p.y, invcolorTurn),gamePieces)){
                                 // if p belongs to legal moves, change the soldier position in the array
-                                System.out.println("Moves contains?");
-                                System.out.println(moves.contains(p));
-                                System.out.println(currentSelection.toString());
-                                for(int i=0;i<gamePieces.size();i++){
-                                    if(gamePieces.get(i).i==currentSelection.x &&gamePieces.get(i).j==currentSelection.y){
-                                        gamePieces.get(i).i = p.x;
-                                        gamePieces.get(i).j = p.y;
-                                        moves.clear();
-                                        currentSelection = new Point(0,0);
+                                    System.out.println("Moves contains?");
+                                    System.out.println(moves.contains(p));
+                                    System.out.println(currentSelection.toString());
+                                    for(int i=0;i<gamePieces.size();i++){
+                                        if(gamePieces.get(i).i==currentSelection.x &&gamePieces.get(i).j==currentSelection.y){
+                                            gamePieces.get(i).i = p.x;
+                                            gamePieces.get(i).j = p.y;
+                                            moves.clear();
+                                            currentSelection = new Point(0,0);
+                                            CurrentTurn = CurrentTurn==CurrentTurn.BLACK?CurrentTurn.RED:CurrentTurn.BLACK;
+                                            }
+                                        }
                                     }
-                                    
                                 }
-                                
-                                         
-                            }
                             
                             repaint();                            
                         }

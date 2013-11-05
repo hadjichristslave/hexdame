@@ -22,6 +22,9 @@ public class PanelRules {
      public PanelRules(ArrayList<Soldier> gamePieces){
          this.gamePieces = gamePieces;
      }
+     public void updatePanelRules(ArrayList<Soldier> gamePieces){
+         this.gamePieces = gamePieces;
+     }
      public static boolean isValidSquare(int i, int j){
              if( (i==0||i==8) && (j>1 && j<7) 
                ||(i==1||i==7) && (j>0 && j<7)
@@ -86,17 +89,14 @@ public class PanelRules {
             ArrayList<Point> mp = new ArrayList<Point>();
             Point temp;
             temp = getMovingPositions(new Point(positionX, positionY), col, Movement.LEFT);
-            System.out.println(temp);
             if( temp.x!=0 || temp.y!=0)
                 mp.add(temp);
             
             temp =getMovingPositions(new Point(positionX, positionY), col, Movement.RIGHT);
-            System.out.println(temp);
             if( temp.x!=0 || temp.y!=0)
                 mp.add(temp);
             
             temp =getMovingPositions(new Point(positionX, positionY), col , Movement.FORWARD);
-            System.out.println(temp);
             if( temp.x!=0 || temp.y!=0)
                 mp.add(temp);
                  
@@ -105,7 +105,7 @@ public class PanelRules {
         }
         public Point getMovingPositions(Point c , Color color , Movement m){
             Orientation or = color==Color.black?Orientation.DOWN:Orientation.UP;
-            Color oposite  = color==Color.black?Color.black:Color.red;
+            Color oposite  = color==Color.black?Color.red:Color.black;
             Point soldierPoint = getXandYgivenOrientation(c, or, m);
             
             Soldier friend = new Soldier(soldierPoint.x,soldierPoint.y,color);
@@ -115,7 +115,7 @@ public class PanelRules {
             else if(containsSoldier(friend, gamePieces))
                   return new Point(0,0);
             else if (containsSoldier(foe, gamePieces))
-                  return getMovingPositions(new Point(soldierPoint.x,soldierPoint.y), color , m);
+                  return new Point(0,0);
             return new Point(0,0);
         }
         public Point getCapturePositions(Point c , Color color , Movement m){
