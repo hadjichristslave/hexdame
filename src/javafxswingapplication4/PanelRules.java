@@ -19,6 +19,7 @@ public class PanelRules {
      enum Movement {LEFT, RIGHT , FORWARD};
      
      
+     
      public PanelRules(ArrayList<Soldier> gamePieces){
          this.gamePieces = gamePieces;
      }
@@ -233,5 +234,17 @@ public class PanelRules {
         }
             
     }
-        
+
+    class SearchNode{
+        private Point from;
+        private Point to;
+        private Point jumps;
+        public SearchNode(Point from, Point to , Point jumps){
+            this.from  = from;
+            this.to    = to;
+            this.jumps = jumps;
+        }
+    
+    }
+    
 }
