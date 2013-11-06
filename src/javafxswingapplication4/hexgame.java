@@ -206,9 +206,12 @@ public class hexgame
                             if(pr.containsSoldier(new Soldier(p.x, p.y, colorTurn) , gamePieces)){
                                 moves.clear();
                                 currentSelection =  p;
+                                
+                                
                                 for(int i=0;i<gamePieces.size();i++){
                                     Point temp = new Point(gamePieces.get(i).i, gamePieces.get(i).j);
-                                    pr.getDFSJumps(temp, colorTurn);
+                                    if(gamePieces.get(i).C==colorTurn)
+                                        pr.getJumps(temp,gamePieces.get(i).C , true);
                                 }
                                 
                                 legalMoves = pr.getMovingPositions(p.x, p.y, colorTurn);
