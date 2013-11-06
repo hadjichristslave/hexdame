@@ -183,20 +183,48 @@ public class PanelRules {
              dFSJumps(p,c,Orientation.DOWN, Movement.RIGHT);
              dFSJumps(p,c,Orientation.DOWN, Movement.FORWARD);
              dFSJumps(p,c,Orientation.DOWN, Movement.LEFT);
+             
+             getJumps(p,c ,false);
             }else{
+                // get the initial state of the board
                 ArrayList<Soldier>    movedSoldiers = gamePieces;
+                //clean previous taboo positions
                 tabooPositions.clear();
-                
-                jumpPositions   =  tempSearchNode.get(tempSearchNode.size()-1);
+                // get the current movement path
+                jumpPositions   =  getFirstAvailableSearchTree();
+                //fill the new taboo positions
+                if(jumpPositions==null){
+                    return -100000000;
+                }
                 fillTabooPieces();
-                tempSearchNode.remove(tempSearchNode.size()-1);
                 
+                
+                //get the movement of the soldier so far
                 Point from = jumpPositions.get(0).from;
                 Point  to  = jumpPositions.get(jumpPositions.size()-1).to;
                 moveFrom(from,to);
                 
                 
+                //Get the current index and size before the DFS operation changes ig
+                int removeIndex = getFirstAvailableIndex();
+                int currentSize = tempSearchNode.size();
                 
+                dFSJumps(p,c,Orientation.UP, Movement.LEFT);
+                dFSJumps(p,c,Orientation.UP, Movement.FORWARD);
+                dFSJumps(p,c,Orientation.UP, Movement.RIGHT);
+                dFSJumps(p,c,Orientation.DOWN, Movement.RIGHT);
+                dFSJumps(p,c,Orientation.DOWN, Movement.FORWARD);
+                dFSJumps(p,c,Orientation.DOWN, Movement.LEFT);
+                
+                if(currentSize == tempSearchNode.size()){
+                    Point foo = new Point(Integer.MAX_VALUE,Integer.MAX_VALUE);
+                    SearchNode as = new SearchNode(foo, foo, foo);
+                    tempSearchNode.get(removeIndex).add(as);
+                     getJumps(p, c,false);
+                }else{
+                    tempSearchNode.remove(removeIndex);
+                    getJumps(p, c,false);
+                }
                 
                 
                 gamePieces = movedSoldiers;
@@ -226,6 +254,24 @@ public class PanelRules {
                 if(sol.x==p.x && sol.y==p.y)
                     return true;
             return false;
+        }
+        public ArrayList<SearchNode> getFirstAvailableSearchTree(){
+            for(int i=tempSearchNode.size()-1;i<0;i--){
+                ArrayList<SearchNode> getz = tempSearchNode.get(i);
+                if(getz.get(getz.size()-1).from.x<Integer.MAX_VALUE){
+                    return tempSearchNode.get(i);
+                }
+            }
+            return null;
+        }
+        public int getFirstAvailableIndex(){
+            for(int i=tempSearchNode.size()-1;i<0;i--){
+                ArrayList<SearchNode> getz = tempSearchNode.get(i);
+                if(getz.get(getz.size()-1).from.x<Integer.MAX_VALUE){
+                    return i;
+                }
+            }
+            return -1;
         }
         
         /**
