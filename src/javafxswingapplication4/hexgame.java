@@ -83,7 +83,7 @@ public class hexgame
 	{
 		DrawingPanel panel = new DrawingPanel();
 		//JFrame.setDefaultLookAndFeelDecorated(true);
-		JFrame frame = new JFrame("Hex Testing 4");
+		JFrame frame = new JFrame("HexDame v0.3");
 		frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
                 
 		Container content = frame.getContentPane();
@@ -205,7 +205,12 @@ public class hexgame
                             
                             if(pr.containsSoldier(new Soldier(p.x, p.y, colorTurn) , gamePieces)){
                                 moves.clear();
-                                currentSelection = p;
+                                currentSelection =  p;
+                                for(int i=0;i<gamePieces.size();i++){
+                                    Point temp = new Point(gamePieces.get(i).i, gamePieces.get(i).j);
+                                    pr.getDFSJumps(temp, colorTurn);
+                                }
+                                
                                 legalMoves = pr.getMovingPositions(p.x, p.y, colorTurn);
                                 if(legalMoves.size()>0){
                                  for(int i = 0;i<legalMoves.size();i++){
@@ -213,7 +218,7 @@ public class hexgame
                                       moves.add(nextMove);
                                     }
                                 }
-                            }else if(  pr.containsSoldier(new Soldier(currentSelection.x, currentSelection.y, colorTurn),gamePieces)
+                            }else if( pr.containsSoldier(new Soldier(currentSelection.x, currentSelection.y, colorTurn),gamePieces)
                                     && pr.isLegalMove(new Point(p.x, p.y),moves)){
                                     for(int i=0;i<gamePieces.size();i++){
                                         if(gamePieces.get(i).i==currentSelection.x &&gamePieces.get(i).j==currentSelection.y){
@@ -228,31 +233,6 @@ public class hexgame
                                 }
                             
                             repaint();                            
-                        }
-                        @Override
-                        public void mousePressed(MouseEvent e) { 
-//                            deleteX   = e.getX();
-//                            deleteY   = e.getY();
-//                            Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );
-//                            
-//                            System.out.println("eventx and y" + e.getX() + " " + e.getY());
-//                            if(PanelRules.containsSoldier(new Soldier(p.x, p.y, Color.black) , gamePieces))
-//                                pr.getLegalMoves(new Soldier(p.x, p.y, Color.black));
-//                            if(PanelRules.containsSoldier(new Soldier(p.x, p.y, Color.red) , gamePieces))
-//                                pr.getLegalMoves(new Soldier(p.x, p.y, Color.red));
-                            
-                        }
-                        @Override
-                        public void mouseReleased(MouseEvent e) {
-//                            drawX   = e.getX();
-//                            drawY   = e.getY();
-//                            Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );
-//                            if(PanelRules.containsSoldier(new Soldier(p.x, p.y, Color.black), gamePieces)){
-//                                System.out.println("Black Pawn ReleaseDetected");
-//                            }if(PanelRules.containsSoldier(new Soldier(p.x, p.y, Color.red),gamePieces)){
-//                                System.out.println("Red Pawn Release  Detected");
-//                            }
-                            
                         }
                         
 		} //end of MyMouseListener class 

@@ -15,9 +15,9 @@ import java.util.Iterator;
  */
 public class PanelRules {
      ArrayList<Soldier> gamePieces = new ArrayList<Soldier>();
+     ArrayList<SearchNode> jumpPositions = new ArrayList<SearchNode>();
      enum Orientation {UP, DOWN};
-     enum Movement {LEFT, RIGHT , FORWARD};
-     
+     enum Movement {LEFT, RIGHT , FORWARD};     
      
      
      public PanelRules(ArrayList<Soldier> gamePieces){
@@ -50,8 +50,9 @@ public class PanelRules {
         }
         /*
          *Self explanatory function
-         *
-         *
+         * Will Return true if it contains a soldier with the given colour
+         * Attention!! Will return true if it contains a soldier whose color differs from the test color inserted
+         * 
          */
         public boolean containsSoldier(Soldier test, ArrayList<Soldier> gamePiece){
             for (int i=0;i<gamePiece.size();i++){
@@ -61,6 +62,11 @@ public class PanelRules {
             }
             return false;
         }
+        /**
+         * For soldier test, arrayList gamepieces, returns true 
+         * if the x's and y's are not used in the game piece array
+         * 
+         * */
         public boolean isEmpty(Soldier test, ArrayList<Soldier> gamePiece){
             for (int i=0;i<gamePiece.size();i++)
                 if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j)
@@ -79,24 +85,6 @@ public class PanelRules {
          * if the soldier is a king, then both directions will be checked
          */
         public ArrayList<Point> getLegalMoves(Soldier c){
-            ArrayList<Point> legalMoves = new ArrayList<Point>();
-            if(!containsSoldier(c, gamePieces)) 
-                return legalMoves;
-            
-            int positionX = c.i;
-            int positionY = c.j;
-            if(c.C== Color.black){
-                getMovingPositions(new Point(positionX, positionY), Color.black, Movement.LEFT);
-                getMovingPositions(new Point(positionX, positionY), Color.black, Movement.RIGHT);
-                getMovingPositions(new Point(positionX, positionY), Color.black, Movement.FORWARD);
-            }else if(c.C == Color.red){
-                getMovingPositions(new Point(positionX, positionY), Color.red, Movement.LEFT);
-                getMovingPositions(new Point(positionX, positionY), Color.red, Movement.RIGHT);
-                getMovingPositions(new Point(positionX, positionY), Color.red, Movement.FORWARD);
-            }
-            return legalMoves;
-        }
-        public ArrayList<Point> getJumpMoves(Soldier c){
             ArrayList<Point> legalMoves = new ArrayList<Point>();
             if(!containsSoldier(c, gamePieces)) 
                 return legalMoves;
@@ -139,6 +127,10 @@ public class PanelRules {
             return mp;
             
         }
+        /**
+         * Returns the point of the position given the point of the movement,
+         * the color of the piece, and the movement orientation 
+         * */
         public Point getMovingPositions(Point c , Color color , Movement m){
             Orientation or = color==Color.black?Orientation.DOWN:Orientation.UP;
             Color oposite  = color==Color.black?Color.red:Color.black;
@@ -154,49 +146,45 @@ public class PanelRules {
                 return new Point(0,0);                  
             return new Point(0,0);
         }
+        
         /**
-         * @param c the point of the position to search for jumps
-         * @param color the color of the soldier
-         * @param m movement mode
-         * @param or the orientation of the movement -- oRientation on jumps differs from simplemovement.
-         *           you can jump 6-directionally, you can move 3 directionally
-         * @return returns the jumping possible positions given a point and color
+         * A Depth first search for possible jumping positions.
+         * Results are passed to jumpPositions list
          * 
-         * */        
-        public Point getJumpingPositions(Point c , Color color , Movement m , Orientation or){
-            Color oposite  = color==Color.black?Color.red:Color.black;
-            Point soldierPoint = getXandYgivenOrientation(c, or, m);
-            Soldier foe    = new Soldier(soldierPoint.x,soldierPoint.y,oposite);
-            
-            if (containsSoldier(foe, gamePieces))
-                return new Point(0,0);                  
-            return new Point(0,0);
-        }
-        public int dFSJumps(Point p, Color c){
+         * 
+         * */
+        public int dFSJumps(Point p, Color c, Orientation or, Movement m){
             Point soldierPoint;
-            soldierPoint = getXandYgivenOrientation(p, Orientation.UP, Movement.LEFT);
-            
-            soldierPoint = getXandYgivenOrientation(p, Orientation.UP, Movement.FORWARD);
-            soldierPoint = getXandYgivenOrientation(p, Orientation.UP, Movement.RIGHT);
-            soldierPoint = getXandYgivenOrientation(p, Orientation.DOWN, Movement.RIGHT);
-            soldierPoint = getXandYgivenOrientation(p, Orientation.DOWN, Movement.FORWARD);
-            soldierPoint = getXandYgivenOrientation(p, Orientation.DOWN, Movement.LEFT);
-            
+            soldierPoint = getXandYgivenOrientation(p, or, m);
+            if(isJumpable(soldierPoint, or, m, c))
+                addToJumpPositions(p, getXandYgivenOrientation(soldierPoint, or,m) , soldierPoint);            
             return 0;
         }
-        public boolean isJumpable(Point p , Color c, Orientation or, Movement m){
+        public int getDFSJumps(Point p, Color c){
+            if(jumpPositions.isEmpty()){
+             dFSJumps(p,c,Orientation.UP, Movement.LEFT);
+             dFSJumps(p,c,Orientation.UP, Movement.FORWARD);
+             dFSJumps(p,c,Orientation.UP, Movement.RIGHT);
+             dFSJumps(p,c,Orientation.DOWN, Movement.RIGHT);
+             dFSJumps(p,c,Orientation.DOWN, Movement.FORWARD);
+             dFSJumps(p,c,Orientation.DOWN, Movement.LEFT);
+            }else{
+                jumpPositions.clear();
+            
+            }
+            return 0;
+        }
+        public boolean isJumpable(Point p , Orientation or, Movement m, Color c){
+            Point sP = getXandYgivenOrientation(p, or, m);
+            Color oposite = c==Color.black?Color.red:Color.black;
+            if(isEmpty(new Soldier(sP.x, sP.y, Color.WHITE), gamePieces)
+            && containsSoldier(new Soldier(p.x, p.y,oposite), gamePieces)) return true;            
             return false;
         }
-        public Point jumpPositions(Point c , Color color , Movement m){
-            Orientation or = color==Color.black?Orientation.DOWN:Orientation.UP;
-            Color oposite  = color==Color.black?Color.black:Color.red;
-            Point soldierPoint = getXandYgivenOrientation(c, or, m);
-            
-            Soldier foe    = new Soldier(soldierPoint.x,soldierPoint.y,oposite);
-            if (containsSoldier(foe, gamePieces))
-                  return getJumpingPositions(new Point(soldierPoint.x,soldierPoint.y), color , m, or);
-            return null;
-        }
+        public void addToJumpPositions(Point from ,Point to ,Point  jumps){
+            System.out.println("Added to jump" +from.toString()  + " " + to.toString() + " " + jumps.toString());
+            jumpPositions.add(new SearchNode(from,to,jumps));
+        } 
         
         /**
      *
@@ -245,6 +233,5 @@ public class PanelRules {
             this.jumps = jumps;
         }
     
-    }
-    
+    }   
 }
