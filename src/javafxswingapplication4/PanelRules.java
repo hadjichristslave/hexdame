@@ -75,22 +75,6 @@ public class PanelRules {
                     return true;
             return false;
         }
-        public boolean containsSoldier(Soldier test, ArrayList<Soldier> gamePiece,ArrayList<SearchNode> jumplocations){
-            Point from = jumplocations.get(0).from;
-            Point to   = jumplocations.get(jumplocations.size()-1).to;
-            for (int i=0;i<gamePiece.size();i++){
-                if(from.x == gamePiece.get(i).i && from.y == gamePiece.get(i).j){
-                    if(test.i ==to.x && test.j == to.y  && test.C.equals(gamePiece.get(i).C))
-                        return true;
-                }
-                else if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j  && test.C.equals(gamePiece.get(i).C))
-                    return true;
-            }
-//            for (int i=0;i<gamePiece.size();i++)
-//                if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j && test.C.equals(gamePiece.get(i).C))
-//                    return true;
-            return false;
-        }
         /**
          * For soldier test, arrayList gamepieces, returns true 
          * if the x's and y's are not used in the game piece array
@@ -103,18 +87,15 @@ public class PanelRules {
             return true;
         }
         public boolean isEmpty(Point p, ArrayList<Soldier> gamePiece,ArrayList<SearchNode> jumplocations){
-            Point from = jumplocations.get(0).from;
-            Point to   = jumplocations.get(jumplocations.size()-1).to;
+            Point from = jumplocations.get(0).from;            
+            //System.out.println("Point to search if empty " +p.toString());
             for (int i=0;i<gamePiece.size();i++){
-                if(from.x == gamePiece.get(i).i && from.y == gamePiece.get(i).j){
-                    if(p.x ==to.x && p.y == to.y)
+                    if(p.x == gamePiece.get(i).i && p.y == gamePiece.get(i).j && !(p.x==from.x &&p.y==from.y) )
                         return false;
-                }
-                else if(p.x == gamePiece.get(i).i && p.y == gamePiece.get(i).j)
-                    return false;
             }
             return true;
         }
+        
         public boolean isLegalMove(Point p , ArrayList<Point> poitnlist){
             for (int i=0;i<poitnlist.size();i++)
                 if(p.x == poitnlist.get(i).x && p.y == poitnlist.get(i).y)
@@ -202,67 +183,77 @@ public class PanelRules {
                 addToJumpPositions(p, getXandYgivenOrientation(soldierPoint, or,m) , soldierPoint);            
             return 0;
         }
-        public int dFSJumps(Point p, Color c, Orientation or, Movement m, ArrayList<SearchNode> jumpPosit, boolean initial){
+        public int dFSJumps(Color c, Orientation or, Movement m, ArrayList<SearchNode> jumpPosit, boolean initial){
+            //Take the last position of the movement as current point
+            Point foo = jumpPosit.get(jumpPosit.size()-1).to;
+            //Search if there is a soldier and is jumpble from this position
             Point soldierPoint;
-            soldierPoint = getXandYgivenOrientation(p, or, m);
+            soldierPoint = getXandYgivenOrientation(foo, or, m);
+            //If it is, add it to the movement path
             if(isJumpable(soldierPoint, or, m, c , jumpPosit))
-                addToJumpPositions(p, getXandYgivenOrientation(soldierPoint, or,m) , soldierPoint);
+                addOnlyToTempJumpPositions(foo, getXandYgivenOrientation(soldierPoint, or,m) , soldierPoint ,jumpPosit);
             return 0;
         }
        
         public int getJumps(Point p, Color c , boolean initial){
             if(initial){
+                //For every search, clear the tempSearch and jump positions
+             tempSearchNode.clear();
              jumpPositions              = new ArrayList<SearchNode>();
+             
+             //Make the DFS search clockwise starting from up and left
              dFSJumps(p,c,Orientation.UP, Movement.LEFT);
              dFSJumps(p,c,Orientation.UP, Movement.FORWARD);
              dFSJumps(p,c,Orientation.UP, Movement.RIGHT);
              dFSJumps(p,c,Orientation.DOWN, Movement.RIGHT);
              dFSJumps(p,c,Orientation.DOWN, Movement.FORWARD);
              dFSJumps(p,c,Orientation.DOWN, Movement.LEFT);
-             
+             //Continue with dfs checking for multi jumps
              getJumps(p,c ,false);
             }else{
+                //Check for multijumps
+                
                 //clean previous taboo positions
                 tabooPositions.clear();
                 // get the current movement path
                 jumpPositions   =  getFirstAvailableSearchTree();
-                //fill the new taboo positions
+                
+                //Check if jump positions is null
                 if(jumpPositions==null){
-//                    System.out.println("got off the recursion");
+//                    for(ArrayList<SearchNode> d:tempSearchNode){
+//                        System.out.println("Path");
+//                        for(SearchNode te:d)
+//                            System.out.println("route "+ te.from.toString() + " " + te.jumps.toString()+ " " + te.to.toString());
+//                        
+//                    }
                     return -100000000;
                 }
-                fillTabooPieces();
                 
-//                //get the movement of the soldier so far
-//                Point from = jumpPositions.get(0).from;
-//                Point to   = jumpPositions.get(jumpPositions.size()-1).to;
-//                
-//                for(int i=0;i<gamePieces.size();i++){
-//                if(gamePieces.get(i).i== from.x && gamePieces.get(i).j== from.y ){
-//                    gamePieces.get(i).i = to.x;
-//                    gamePieces.get(i).j = to.y;
-//                    }
-//                }
+                //fill the new taboo positions
+                fillTabooPieces();
                 
                 //Get the current index and size before the DFS operation changes ig
                 int removeIndex = getFirstAvailableIndex();
                 int currentSize = tempSearchNode.size();
                 
-                dFSJumps(p,c,Orientation.UP, Movement.LEFT , jumpPositions , false);
-                dFSJumps(p,c,Orientation.UP, Movement.FORWARD, jumpPositions ,false);
-                dFSJumps(p,c,Orientation.UP, Movement.RIGHT, jumpPositions,false);
-                dFSJumps(p,c,Orientation.DOWN, Movement.RIGHT, jumpPositions,false);
-                dFSJumps(p,c,Orientation.DOWN, Movement.FORWARD, jumpPositions,false);
-                dFSJumps(p,c,Orientation.DOWN, Movement.LEFT, jumpPositions,false);
+                 // Make a new DFS with the path as input
+                dFSJumps(c,Orientation.UP, Movement.LEFT, jumpPositions,false);
+                dFSJumps(c,Orientation.UP, Movement.FORWARD, jumpPositions ,false);                
+                dFSJumps(c,Orientation.UP, Movement.RIGHT, jumpPositions ,false); 
+                dFSJumps(c,Orientation.DOWN, Movement.RIGHT, jumpPositions,false);
+                dFSJumps(c,Orientation.DOWN, Movement.FORWARD, jumpPositions,false);
+                dFSJumps(c,Orientation.DOWN, Movement.LEFT, jumpPositions,false);
                 
-                                
+                
+                //Check if the size of the search tree has gotten bigger
                 if(currentSize == tempSearchNode.size()){
+                    System.out.println("Maintained search length");
                     Point foo = new Point(Integer.MAX_VALUE,Integer.MAX_VALUE);
                     SearchNode as = new SearchNode(foo, foo, foo);
                     tempSearchNode.get(removeIndex).add(as);
-                     getJumps(p, c,false);
+                    getJumps(p, c,false);
                 }else{
-                    tempSearchNode.remove(removeIndex);
+                // if the size of the tree got bigger, continue searching with a new DFS search
                     getJumps(p, c,false);
                 }
             }
@@ -270,25 +261,40 @@ public class PanelRules {
         }
         
         public void addToJumpPositions(Point from ,Point to ,Point  jumps){
-            System.out.println(from.toString() + " " + to.toString() + " " + jumps.toString());
-            jumpPositions.add(new SearchNode(from,to,jumps));
-            tempSearchNode.add(jumpPositions);  
+            ArrayList<SearchNode> foo = new ArrayList<SearchNode>();
+            foo.add(new SearchNode(from,to,jumps));
+            tempSearchNode.add(foo);
         }
+        
+        public void addOnlyToTempJumpPositions(Point from ,Point to ,Point  jumps ,ArrayList<SearchNode> jumpPosit){
+            tempSearchNode.add(jumpPosit);
+            tempSearchNode.get(tempSearchNode.size()-1).add(new SearchNode(from,to,jumps));            
+        }
+        
         public boolean isJumpable(Point p , Orientation or, Movement m, Color c){
             Point sP = getXandYgivenOrientation(p, or, m);
             Color oposite = c==Color.black?Color.red:Color.black;
-            
             if(isEmpty(new Soldier(sP.x, sP.y, Color.WHITE), gamePieces)
-            && containsSoldier(new Soldier(p.x, p.y,oposite), gamePieces)) return true;            
+            && containsSoldier(new Soldier(p.x, p.y,oposite), gamePieces)) return true;          
             return false;
         }
-        
+        /**
+         * @param p defines the soldier point on the board
+         * @param or defines the orientation
+         * @param m defines the movement
+         * @param c defines the color
+         * @param jumplocations defines the path that is already searched
+         * 
+         * */
         public boolean isJumpable(Point p , Orientation or, Movement m, Color c , ArrayList<SearchNode> jumplocations){
+            //If the point continuing the movement is empty and the current point is the soldier we are looking for,
+            //return true.
             Point sP = getXandYgivenOrientation(p, or, m);
             Color oposite = c==Color.black?Color.red:Color.black;
-            if(isEmpty(sP, gamePieces,jumplocations)
-            && containsSoldier(new Soldier(p.x, p.y,oposite), gamePieces, jumplocations)
-            && !isTabooPiece(p)) return true;            
+            if(isValidSquare(sP.x, sP.y)
+            && isEmpty(sP, gamePieces,jumplocations)
+            && containsSoldier(new Soldier(p.x, p.y,oposite), gamePieces)
+            && !isTabooPiece(p)) return true;
             return false;
         }
         public void fillTabooPieces(){
@@ -302,20 +308,20 @@ public class PanelRules {
             return false;
         }
         public ArrayList<SearchNode> getFirstAvailableSearchTree(){
-            for(int i=tempSearchNode.size()-1;i>0;i--){
+            for(int i=tempSearchNode.size()-1;i>=0;i--){
                 ArrayList<SearchNode> getz = tempSearchNode.get(i);
-                if(getz.get(getz.size()-1).from.x<Integer.MAX_VALUE){
+                if(getz.get(getz.size()-1).from.x<Integer.MAX_VALUE)
                     return tempSearchNode.get(i);
-                }
+                
             }
             return null;
         }
         public int getFirstAvailableIndex(){
-            for(int i=tempSearchNode.size()-1;i>0;i--){
+            for(int i=tempSearchNode.size()-1;i>=0;i--){                
                 ArrayList<SearchNode> getz = tempSearchNode.get(i);
-                if(getz.get(getz.size()-1).from.x<Integer.MAX_VALUE){
+                if(getz.get(getz.size()-1).from.x<Integer.MAX_VALUE)
                     return i;
-                }
+                
             }
             return -1;
         }
