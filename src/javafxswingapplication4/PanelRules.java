@@ -17,20 +17,20 @@ public class PanelRules {
     /*
      An array containing the positions of all the soldiers of the board     
      */
-     ArrayList<Soldier> gamePieces                    = new ArrayList<Soldier>();
+     private ArrayList<Soldier> gamePieces                    = new ArrayList<Soldier>();
      /*
       An array containing all the legal jump positions.
       */     
-     ArrayList<SearchNode> jumpPositions              = new ArrayList<SearchNode>();
+     private ArrayList<SearchNode> jumpPositions              = new ArrayList<SearchNode>();
      /*
       Also used for the DFS of the legal jump positions
       */     
-     ArrayList<ArrayList<SearchNode>> tempSearchNode  = new ArrayList<ArrayList<SearchNode>>();
+     private ArrayList<ArrayList<SearchNode>> tempSearchNode  = new ArrayList<ArrayList<SearchNode>>();
      /*
       * An array containing taboo points, positions on the map already jumped
       */     
-     ArrayList<Point>      tabooPositions = new ArrayList<Point>();
-     
+     private ArrayList<Point>      tabooPositions = new ArrayList<Point>();
+
      enum Orientation {UP, DOWN};
      enum Movement {LEFT, RIGHT , FORWARD};     
      
@@ -70,11 +70,25 @@ public class PanelRules {
          * 
          */
         public boolean containsSoldier(Soldier test, ArrayList<Soldier> gamePiece){
-            for (int i=0;i<gamePiece.size();i++){
-                if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j && test.C.equals(gamePiece.get(i).C)){
+            for (int i=0;i<gamePiece.size();i++)
+                if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j && test.C.equals(gamePiece.get(i).C))
                     return true;
+            return false;
+        }
+        public boolean containsSoldier(Soldier test, ArrayList<Soldier> gamePiece,ArrayList<SearchNode> jumplocations){
+            Point from = jumplocations.get(0).from;
+            Point to   = jumplocations.get(jumplocations.size()-1).to;
+            for (int i=0;i<gamePiece.size();i++){
+                if(from.x == gamePiece.get(i).i && from.y == gamePiece.get(i).j){
+                    if(test.i ==to.x && test.j == to.y  && test.C.equals(gamePiece.get(i).C))
+                        return true;
                 }
+                else if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j  && test.C.equals(gamePiece.get(i).C))
+                    return true;
             }
+//            for (int i=0;i<gamePiece.size();i++)
+//                if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j && test.C.equals(gamePiece.get(i).C))
+//                    return true;
             return false;
         }
         /**
@@ -86,6 +100,19 @@ public class PanelRules {
             for (int i=0;i<gamePiece.size();i++)
                 if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j)
                     return false;
+            return true;
+        }
+        public boolean isEmpty(Point p, ArrayList<Soldier> gamePiece,ArrayList<SearchNode> jumplocations){
+            Point from = jumplocations.get(0).from;
+            Point to   = jumplocations.get(jumplocations.size()-1).to;
+            for (int i=0;i<gamePiece.size();i++){
+                if(from.x == gamePiece.get(i).i && from.y == gamePiece.get(i).j){
+                    if(p.x ==to.x && p.y == to.y)
+                        return false;
+                }
+                else if(p.x == gamePiece.get(i).i && p.y == gamePiece.get(i).j)
+                    return false;
+            }
             return true;
         }
         public boolean isLegalMove(Point p , ArrayList<Point> poitnlist){
@@ -175,8 +202,17 @@ public class PanelRules {
                 addToJumpPositions(p, getXandYgivenOrientation(soldierPoint, or,m) , soldierPoint);            
             return 0;
         }
+        public int dFSJumps(Point p, Color c, Orientation or, Movement m, ArrayList<SearchNode> jumpPosit, boolean initial){
+            Point soldierPoint;
+            soldierPoint = getXandYgivenOrientation(p, or, m);
+            if(isJumpable(soldierPoint, or, m, c , jumpPosit))
+                addToJumpPositions(p, getXandYgivenOrientation(soldierPoint, or,m) , soldierPoint);
+            return 0;
+        }
+       
         public int getJumps(Point p, Color c , boolean initial){
             if(initial){
+             jumpPositions              = new ArrayList<SearchNode>();
              dFSJumps(p,c,Orientation.UP, Movement.LEFT);
              dFSJumps(p,c,Orientation.UP, Movement.FORWARD);
              dFSJumps(p,c,Orientation.UP, Movement.RIGHT);
@@ -186,36 +222,40 @@ public class PanelRules {
              
              getJumps(p,c ,false);
             }else{
-                // get the initial state of the board
-                ArrayList<Soldier>    movedSoldiers = gamePieces;
                 //clean previous taboo positions
                 tabooPositions.clear();
                 // get the current movement path
                 jumpPositions   =  getFirstAvailableSearchTree();
                 //fill the new taboo positions
                 if(jumpPositions==null){
+//                    System.out.println("got off the recursion");
                     return -100000000;
                 }
                 fillTabooPieces();
                 
-                
-                //get the movement of the soldier so far
-                Point from = jumpPositions.get(0).from;
-                Point  to  = jumpPositions.get(jumpPositions.size()-1).to;
-                moveFrom(from,to);
-                
+//                //get the movement of the soldier so far
+//                Point from = jumpPositions.get(0).from;
+//                Point to   = jumpPositions.get(jumpPositions.size()-1).to;
+//                
+//                for(int i=0;i<gamePieces.size();i++){
+//                if(gamePieces.get(i).i== from.x && gamePieces.get(i).j== from.y ){
+//                    gamePieces.get(i).i = to.x;
+//                    gamePieces.get(i).j = to.y;
+//                    }
+//                }
                 
                 //Get the current index and size before the DFS operation changes ig
                 int removeIndex = getFirstAvailableIndex();
                 int currentSize = tempSearchNode.size();
                 
-                dFSJumps(p,c,Orientation.UP, Movement.LEFT);
-                dFSJumps(p,c,Orientation.UP, Movement.FORWARD);
-                dFSJumps(p,c,Orientation.UP, Movement.RIGHT);
-                dFSJumps(p,c,Orientation.DOWN, Movement.RIGHT);
-                dFSJumps(p,c,Orientation.DOWN, Movement.FORWARD);
-                dFSJumps(p,c,Orientation.DOWN, Movement.LEFT);
+                dFSJumps(p,c,Orientation.UP, Movement.LEFT , jumpPositions , false);
+                dFSJumps(p,c,Orientation.UP, Movement.FORWARD, jumpPositions ,false);
+                dFSJumps(p,c,Orientation.UP, Movement.RIGHT, jumpPositions,false);
+                dFSJumps(p,c,Orientation.DOWN, Movement.RIGHT, jumpPositions,false);
+                dFSJumps(p,c,Orientation.DOWN, Movement.FORWARD, jumpPositions,false);
+                dFSJumps(p,c,Orientation.DOWN, Movement.LEFT, jumpPositions,false);
                 
+                                
                 if(currentSize == tempSearchNode.size()){
                     Point foo = new Point(Integer.MAX_VALUE,Integer.MAX_VALUE);
                     SearchNode as = new SearchNode(foo, foo, foo);
@@ -225,23 +265,29 @@ public class PanelRules {
                     tempSearchNode.remove(removeIndex);
                     getJumps(p, c,false);
                 }
-                
-                
-                gamePieces = movedSoldiers;
-                jumpPositions.clear();
             }
             return 0;
         }
+        
         public void addToJumpPositions(Point from ,Point to ,Point  jumps){
-            System.out.println("Added to jump" +from.toString()  + " " + to.toString() + " " + jumps.toString());
+            System.out.println(from.toString() + " " + to.toString() + " " + jumps.toString());
             jumpPositions.add(new SearchNode(from,to,jumps));
-            tempSearchNode.add(jumpPositions);
+            tempSearchNode.add(jumpPositions);  
         }
         public boolean isJumpable(Point p , Orientation or, Movement m, Color c){
             Point sP = getXandYgivenOrientation(p, or, m);
             Color oposite = c==Color.black?Color.red:Color.black;
+            
             if(isEmpty(new Soldier(sP.x, sP.y, Color.WHITE), gamePieces)
-            && containsSoldier(new Soldier(p.x, p.y,oposite), gamePieces)
+            && containsSoldier(new Soldier(p.x, p.y,oposite), gamePieces)) return true;            
+            return false;
+        }
+        
+        public boolean isJumpable(Point p , Orientation or, Movement m, Color c , ArrayList<SearchNode> jumplocations){
+            Point sP = getXandYgivenOrientation(p, or, m);
+            Color oposite = c==Color.black?Color.red:Color.black;
+            if(isEmpty(sP, gamePieces,jumplocations)
+            && containsSoldier(new Soldier(p.x, p.y,oposite), gamePieces, jumplocations)
             && !isTabooPiece(p)) return true;            
             return false;
         }
@@ -256,7 +302,7 @@ public class PanelRules {
             return false;
         }
         public ArrayList<SearchNode> getFirstAvailableSearchTree(){
-            for(int i=tempSearchNode.size()-1;i<0;i--){
+            for(int i=tempSearchNode.size()-1;i>0;i--){
                 ArrayList<SearchNode> getz = tempSearchNode.get(i);
                 if(getz.get(getz.size()-1).from.x<Integer.MAX_VALUE){
                     return tempSearchNode.get(i);
@@ -265,7 +311,7 @@ public class PanelRules {
             return null;
         }
         public int getFirstAvailableIndex(){
-            for(int i=tempSearchNode.size()-1;i<0;i--){
+            for(int i=tempSearchNode.size()-1;i>0;i--){
                 ArrayList<SearchNode> getz = tempSearchNode.get(i);
                 if(getz.get(getz.size()-1).from.x<Integer.MAX_VALUE){
                     return i;
@@ -295,8 +341,6 @@ public class PanelRules {
                     case RIGHT:    return (p.x%2==0)?new Point(p.x+1,p.y):new Point(p.x+1,p.y+1);
                     case FORWARD:  return new Point(p.x, p.y+1);
                 }
-            }else{
-                
             }
             return new Point(0,0);
         }
@@ -304,8 +348,8 @@ public class PanelRules {
         public void moveFrom(Point from , Point to){
         for(int i=0;i<gamePieces.size();i++){
             if(gamePieces.get(i).i== from.x && gamePieces.get(i).j== from.y ){
-                gamePieces.get(i).i = to.x;
-                gamePieces.get(i).j = to.y;
+                //gamePieces.get(i).i = to.x;
+                //gamePieces.get(i).j = to.y;
             }
         }
             
@@ -320,6 +364,5 @@ public class PanelRules {
             this.to    = to;
             this.jumps = jumps;
         }
-    
-    }   
+    }
 }

@@ -25,7 +25,7 @@ import java.util.Iterator;
  
 public class hexgame
 {
-    ArrayList<Soldier> gamePieces = new ArrayList<Soldier>();
+    private ArrayList<Soldier> gamePiecesr = new ArrayList<Soldier>();
     
     PanelRules pr;
     enum turn {RED, BLACK};
@@ -107,11 +107,10 @@ public class hexgame
             for(int i=0;i<BSIZE;i++) 
                 for (int j=0;j<BSIZE;j++) 
                     if( PanelRules.isValidSquare(i, j) && PanelRules.isValidSoldierSquare(i, j) && j<4 )
-                        gamePieces.add(new Soldier(i , j , Color.black));
+                        gamePiecesr.add(new Soldier(i , j , Color.black));
                     else if(PanelRules.isValidSquare(i, j) && PanelRules.isValidSoldierSquare(i, j) && j>4)
-                        gamePieces.add(new Soldier(i , j , Color.red));	
-            
-            pr = new PanelRules(gamePieces);
+                        gamePiecesr.add(new Soldier(i , j , Color.red));            
+            pr = new PanelRules(gamePiecesr);
         }
         
         
@@ -166,9 +165,9 @@ public class hexgame
                                     if( PanelRules.isValidSquare(i, j)){                                     
                                         Soldier Sold1 = new Soldier(i , j , Color.black);
                                         Soldier Sold2 = new Soldier(i , j , Color.red);
-                                        if(pr.containsSoldier(Sold1, gamePieces))
+                                        if(pr.containsSoldier(Sold1, gamePiecesr))
                                             hexmech.fillcircle(i,j,g2,Sold1.C);
-                                        else if((pr.containsSoldier(Sold2, gamePieces)))
+                                        else if((pr.containsSoldier(Sold2, gamePiecesr)))
                                             hexmech.fillcircle(i,j,g2,Sold2.C);   
                                     }
                                          
@@ -203,31 +202,32 @@ public class hexgame
                             Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
                             Color invcolorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
                             
-                            if(pr.containsSoldier(new Soldier(p.x, p.y, colorTurn) , gamePieces)){
+                            if(pr.containsSoldier(new Soldier(p.x, p.y, colorTurn) , gamePiecesr)){
                                 moves.clear();
                                 currentSelection =  p;
                                 
                                 
-                                for(int i=0;i<gamePieces.size();i++){
-                                    Point temp = new Point(gamePieces.get(i).i, gamePieces.get(i).j);
-                                    if(gamePieces.get(i).C==colorTurn)
-                                        pr.getJumps(temp,gamePieces.get(i).C , true);
+                                for(int i=0;i<gamePiecesr.size();i++){
+                                    Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
+                                    if(gamePiecesr.get(i).C==colorTurn){
+                                        pr.getJumps(temp,gamePiecesr.get(i).C , true);
+                                    }
                                 }
                                 
                                 legalMoves = pr.getMovingPositions(p.x, p.y, colorTurn);
                                 if(legalMoves.size()>0){
-                                 for(int i = 0;i<legalMoves.size();i++){
+                                    for(int i = 0;i<legalMoves.size();i++){
                                       Point nextMove = (Point) legalMoves.get(i);
                                       moves.add(nextMove);
                                     }
                                 }
-                            }else if( pr.containsSoldier(new Soldier(currentSelection.x, currentSelection.y, colorTurn),gamePieces)
+                            }else if( pr.containsSoldier(new Soldier(currentSelection.x, currentSelection.y, colorTurn),gamePiecesr)
                                     && pr.isLegalMove(new Point(p.x, p.y),moves)){
-                                    for(int i=0;i<gamePieces.size();i++){
-                                        if(gamePieces.get(i).i==currentSelection.x &&gamePieces.get(i).j==currentSelection.y){
-                                            gamePieces.get(i).i = p.x;
-                                            gamePieces.get(i).j = p.y;
-                                            pr.updatePieces(gamePieces);
+                                    for(int i=0;i<gamePiecesr.size();i++){
+                                        if(gamePiecesr.get(i).i==currentSelection.x &&gamePiecesr.get(i).j==currentSelection.y){
+                                            gamePiecesr.get(i).i = p.x;
+                                            gamePiecesr.get(i).j = p.y;
+                                            pr.updatePieces(gamePiecesr);
                                             moves.clear();
                                             currentSelection = new Point(0,0);
                                             CurrentTurn = CurrentTurn==CurrentTurn.BLACK?CurrentTurn.RED:CurrentTurn.BLACK;
@@ -239,5 +239,5 @@ public class hexgame
                         }
                         
 		} //end of MyMouseListener class 
-	} // end of DrawingPanel class        
+	} // end of DrawingPanel class   
 }
