@@ -208,18 +208,26 @@ public class hexgame
                                 moves.clear();
                                 currentSelection =  p;
                                 
-                                
+                                ArrayList<JumpPosition> answer = new ArrayList<JumpPosition>();
                                 for(int i=0;i<gamePiecesr.size();i++){
                                     Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
                                     if(gamePiecesr.get(i).C==colorTurn){
                                         try {
-                                            pr.getJumps(temp,gamePiecesr.get(i).C , true);
+                                            ArrayList<JumpPosition> getJump = pr.getJumps(temp,gamePiecesr.get(i).C , true);
+                                            System.out.println(getJump.size());
+                                            System.out.println(getJump==null);
+                                            if(getJump!=null)
+                                                for(JumpPosition jp :getJump){
+                                                    answer.add(jp);
+                                                    jp.print();
+                                                }
                                         } catch (CloneNotSupportedException ex) {
                                             Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
                                         }
                                     }
                                 }
-                                
+                                for(JumpPosition jp:answer) jp.print();
+                                    
                                 legalMoves = pr.getMovingPositions(p.x, p.y, colorTurn);
                                 if(legalMoves.size()>0){
                                     for(int i = 0;i<legalMoves.size();i++){

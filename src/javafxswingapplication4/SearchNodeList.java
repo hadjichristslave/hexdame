@@ -73,5 +73,19 @@ public class SearchNodeList  implements Cloneable{
     protected Object clone() throws CloneNotSupportedException {
         return super.clone();
     }
-    
+    public ArrayList<JumpPosition> getMaxPositions(){
+        ArrayList<JumpPosition> answer = new ArrayList<JumpPosition>();
+        int max = 0;
+        for(JumpPosition js:tempSearchNode)
+            if(max<js.jumpPosition.size()) max =js.jumpPosition.size();
+        for(JumpPosition js:tempSearchNode)
+            if(max==js.jumpPosition.size()) answer.add(js);
+        return answer;
+    }
+    public boolean legalMoveExists(){
+        int max=0;
+        for(JumpPosition js:tempSearchNode)
+            if(max<js.jumpPosition.size()) max =js.jumpPosition.size();
+        return max>0;
+    }
 }

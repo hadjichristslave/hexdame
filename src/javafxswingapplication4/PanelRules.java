@@ -193,11 +193,13 @@ public class PanelRules {
             }
             return 0;
         }
-       
-        public int getJumps(Point p, Color c , boolean initial) throws CloneNotSupportedException {
-            int i=0;     
-            while(i<Integer.MAX_VALUE){
-                if(i==0){
+       /**
+        * 
+        * Recursive jumps estimator
+        * 
+        * */
+        public ArrayList<JumpPosition> getJumps(Point p, Color c , boolean initial) throws CloneNotSupportedException {
+                if(initial){
                     //For every search, clear the tempSearch and jump positions
                  tempSearchNode.clear();
                  jumpPositions              = new JumpPosition(new ArrayList<SearchNode>());
@@ -210,60 +212,41 @@ public class PanelRules {
                  dFSJumps(p,c,Orientation.DOWN, Movement.FORWARD);
                  dFSJumps(p,c,Orientation.DOWN, Movement.LEFT);
                  //Continue with dfs checking for multi jumps
-                 i++;
-                 //getJumps(p,c ,false);
+                 getJumps(p,c ,false);
                 }else{
                     //Check for multijumps
 
                     //clean previous taboo positions
                     tabooPositions.clear();
                     // get the current movement path
-                    jumpPositions   =  getFirstAvailableSearchTree();
-                    
+                    jumpPositions   =  getFirstAvailableSearchTree();                    
 
                     //Check if jump positions is null
-                    if(jumpPositions==null){
-                        System.out.println("********************************************");
-                        System.out.println("Current search nodes");
-                        tempSearchNode.print();
-                        System.out.println("********************************************");
-                        return -100000000;                        
-                    }
-
-
+                    if(jumpPositions==null) return tempSearchNode.getMaxPositions();
+                    
                     //fill the new taboo positions
                     fillTabooPieces();
-
                     //Get the current index and size before the DFS operation changes ig
                     int removeIndex = getFirstAvailableIndex();
                     int currentSize = tempSearchNode.size();
-
                      // Make a new DFS with the path as input
-                    System.out.println("New iteration in dfs");
+                    //System.out.println("New iteration in dfs");
                     dFSJumps(c,Orientation.UP, Movement.LEFT, jumpPositions,false);
                     dFSJumps(c,Orientation.UP, Movement.FORWARD, jumpPositions ,false);
                     dFSJumps(c,Orientation.UP, Movement.RIGHT, jumpPositions ,false); 
                     dFSJumps(c,Orientation.DOWN, Movement.RIGHT, jumpPositions,false);
                     dFSJumps(c,Orientation.DOWN, Movement.FORWARD, jumpPositions,false);
                     dFSJumps(c,Orientation.DOWN, Movement.LEFT, jumpPositions,false);
-
-
                     //Check if the size of the search tree has gotten bigger
                     if(currentSize == tempSearchNode.size()){
-                        //System.out.println("Maintained search length");
                         Point foo = new Point(Integer.MAX_VALUE,Integer.MAX_VALUE);
                         SearchNode as = new SearchNode(foo, foo, foo);
                         tempSearchNode.get(removeIndex).append(as);
-                        i++;
-                        //getJumps(p, c,false);
-                    }
-                    
-                    // if the size of the tree got bigger, continue searching with a new DFS search
-
-                }
-            }
-            
-            return 0;
+                        getJumps(p, c,false);
+                    }else
+                        getJumps(p, c,false);
+                }            
+            return null;
         }
         
         public void addToJumpPositions(Point from ,Point to ,Point  jumps){
@@ -275,18 +258,10 @@ public class PanelRules {
         
         public void addOnlyToTempJumpPositions(Point from ,Point to ,Point  jumps ,JumpPosition jumpPosit ,Orientation or, Movement m) throws CloneNotSupportedException{
             //modify it for no future or and m movement
-            
             jumpPosit.setSearched(or, m);
-            
-            //JumpPosition foo = new JumpPosition(jumpPosit.getPosition());
-            //foo.setSearched(or, m);
-            //tempSearchNode.add(foo);
-            
-            
+            //Clone to pass by value and not let the other values be modified
             JumpPosition snl = (JumpPosition) jumpPosit.clone();
-            tempSearchNode.add(new SearchNode(from,to,jumps) , snl);
-            
-            
+            tempSearchNode.add(new SearchNode(from,to,jumps) , snl);            
         }
         
         public boolean isJumpable(Point p , Orientation or, Movement m, Color c){
@@ -309,8 +284,7 @@ public class PanelRules {
             //return true.
             
             Point sP = getXandYgivenOrientation(p, or, m);
-            Color oposite = c==Color.black?Color.red:Color.black;
-            
+            Color oposite = c==Color.black?Color.red:Color.black;            
             
             if(!jumplocations.isAlreadySearched(or, m)
             && isValidSquare(sP.x, sP.y)
@@ -334,7 +308,6 @@ public class PanelRules {
                 JumpPosition getz = tempSearchNode.get(i);
                 if(getz.jumpPosition.get(getz.jumpPosition.size()-1).from.x<Integer.MAX_VALUE)
                     return tempSearchNode.get(i);
-                
             }
             return null;
         }
@@ -343,12 +316,10 @@ public class PanelRules {
                 JumpPosition getz = tempSearchNode.get(i);
                 if(getz.jumpPosition.get(getz.jumpPosition.size()-1).from.x<Integer.MAX_VALUE)
                     return i;
-                
             }
             return -1;
         }
-        
-        /**
+     /**
      *
      * @param p a point on the board, regarding the position of the piece
      * @param a describes the orientation of the move, with possible moves UP or DOWN
@@ -362,7 +333,6 @@ public class PanelRules {
                     case RIGHT:   return (p.x%2==0)?new Point(p.x+1,p.y-1):new Point(p.x+1,p.y);
                     case FORWARD: return new Point(p.x, p.y-1);
                 }
-                        
             }else if(a ==Orientation.DOWN){
                 switch (m){
                     case LEFT:    return (p.x%2==0)?new Point(p.x-1,p.y):new Point(p.x-1,p.y+1);
@@ -372,6 +342,4 @@ public class PanelRules {
             }
             return new Point(0,0);
         }
-
-    
 }
