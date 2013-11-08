@@ -13,6 +13,8 @@ import javax.swing.*;
 import java.awt.event.*; 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
  
 /**********************************
   This is the main class of a Java program to play a game based on hexagonal tiles.
@@ -210,7 +212,11 @@ public class hexgame
                                 for(int i=0;i<gamePiecesr.size();i++){
                                     Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
                                     if(gamePiecesr.get(i).C==colorTurn){
-                                        pr.getJumps(temp,gamePiecesr.get(i).C , true);
+                                        try {
+                                            pr.getJumps(temp,gamePiecesr.get(i).C , true);
+                                        } catch (CloneNotSupportedException ex) {
+                                            Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+                                        }
                                     }
                                 }
                                 
