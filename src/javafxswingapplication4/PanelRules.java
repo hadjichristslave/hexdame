@@ -134,34 +134,11 @@ public class PanelRules {
             ArrayList<Point> mp = new ArrayList<Point>();
             Point temp;
             temp = getMovingPositions(new Point(positionX, positionY), col, Movement.LEFT);
-            if( temp.x!=0 || temp.y!=0)
-                mp.add(temp);
-            
+            if( temp.x!=0 || temp.y!=0) mp.add(temp);
             temp =getMovingPositions(new Point(positionX, positionY), col, Movement.RIGHT);
-            if( temp.x!=0 || temp.y!=0)
-                mp.add(temp);
-            
+            if( temp.x!=0 || temp.y!=0) mp.add(temp);
             temp =getMovingPositions(new Point(positionX, positionY), col , Movement.FORWARD);
-            if( temp.x!=0 || temp.y!=0)
-                mp.add(temp);
-                 
-            return mp;
-        }
-        public ArrayList<Point> getKingMovingPositions(int positionX, int positionY, Color col){
-            ArrayList<Point> mp = new ArrayList<Point>();
-            Point temp;
-            temp = getMovingPositions(new Point(positionX, positionY), col, Movement.LEFT);
-            if( temp.x!=0 || temp.y!=0)
-                mp.add(temp);
-            
-            temp =getMovingPositions(new Point(positionX, positionY), col, Movement.RIGHT);
-            if( temp.x!=0 || temp.y!=0)
-                mp.add(temp);
-            
-            temp =getMovingPositions(new Point(positionX, positionY), col , Movement.FORWARD);
-            if( temp.x!=0 || temp.y!=0)
-                mp.add(temp);
-                 
+            if( temp.x!=0 || temp.y!=0) mp.add(temp);
             return mp;
         }
         /**
@@ -183,7 +160,48 @@ public class PanelRules {
                 return new Point(0,0);                  
             return new Point(0,0);
         }
-        
+        /**
+         * 
+         * returns the moves of a king piece
+         * 
+         * 
+         * */
+        public ArrayList<Point> getKingMovingPositions(int positionX, int positionY, Color col){
+            ArrayList<Point> mp = new ArrayList<Point>();
+            ArrayList<Point> moves  = new ArrayList<Point>();
+            moves = getKingMovingPositions(new Point(positionX, positionY), col, Movement.LEFT , Orientation.DOWN);
+                if( moves.size()>0)    mp.addAll(moves);            
+            moves = getKingMovingPositions(new Point(positionX, positionY), col, Movement.RIGHT , Orientation.DOWN);
+                if( moves.size()>0)    mp.addAll(moves);            
+            moves = getKingMovingPositions(new Point(positionX, positionY), col , Movement.FORWARD , Orientation.DOWN);
+                if( moves.size()>0)    mp.addAll(moves);
+            moves = getKingMovingPositions(new Point(positionX, positionY), col, Movement.LEFT , Orientation.UP);
+                if( moves.size()>0)    mp.addAll(moves);            
+            moves = getKingMovingPositions(new Point(positionX, positionY), col, Movement.RIGHT , Orientation.UP);
+                if( moves.size()>0)    mp.addAll(moves);            
+            moves = getKingMovingPositions(new Point(positionX, positionY), col , Movement.FORWARD , Orientation.UP);
+                if( moves.size()>0)    mp.addAll(moves);
+                
+            for(Point p:mp) System.out.println(p.toString());
+            
+            return mp;
+        }
+        public ArrayList<Point> getKingMovingPositions(Point c , Color color , Movement m, Orientation or){
+            ArrayList<Point> validMultiJumpSquares = new ArrayList<Point>();
+            Color oposite  = color==Color.black?Color.red:Color.black;
+            Point soldierPoint = getXandYgivenOrientation(c, or, m);
+            Point currentPos = getXandYgivenOrientation(c, or, m);
+            for(int i=0;i<8;i++){
+                if(i!=0) currentPos = getXandYgivenOrientation(currentPos, or, m);
+                if(!isValidSquare(currentPos.x, currentPos.y)) break;
+                Soldier friend = new Soldier(soldierPoint.x,soldierPoint.y,color);
+                Soldier foe    = new Soldier(soldierPoint.x,soldierPoint.y,oposite);
+                if(!containsSoldier(friend, gamePieces) && !containsSoldier(foe, gamePieces))
+                    validMultiJumpSquares.add(currentPos);
+                else return   validMultiJumpSquares;
+            }
+            return validMultiJumpSquares;
+        }
         /**
          * A Depth first search for possible jumping positions.
          * Results are passed to jumpPositions list

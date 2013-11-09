@@ -243,6 +243,11 @@ public class hexgame
                                         }
                                     }
                                 }
+                                for(int i=0;i<gamePiecesr.size();i++){
+                                    Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
+                                    if(gamePiecesr.get(i).isKing)
+                                        pr.getKingMovingPositions(temp.x, temp.y, colorTurn);
+                                }
                                 //Get all moves no jumps included
                                 legalMoves = pr.getMovingPositions(p.x, p.y, colorTurn);
                                 if(legalMoves.size()>0){
@@ -257,15 +262,9 @@ public class hexgame
                                         if(gamePiecesr.get(i).i==currentSelection.x &&gamePiecesr.get(i).j==currentSelection.y){
                                             gamePiecesr.get(i).i = p.x;
                                             gamePiecesr.get(i).j = p.y;
-                                            System.out.println(isKingSquare(p.x, p.y, colorTurn));
                                             if(isKingSquare(p.x, p.y, colorTurn))
                                                 gamePiecesr.get(i).isKing =true;
-                                            System.out.println(gamePiecesr.get(i).i);
-                                            System.out.println(gamePiecesr.get(i).j);
-                                            System.out.println(gamePiecesr.get(i).C);
-                                            System.out.println(gamePiecesr.get(i).isKing);
-                                            pr.updatePieces(gamePiecesr);
-                                            
+                                            pr.updatePieces(gamePiecesr);                                            
                                             moves.clear();
                                             currentSelection = new Point(0,0);
                                             CurrentTurn = CurrentTurn==CurrentTurn.BLACK?CurrentTurn.RED:CurrentTurn.BLACK;
