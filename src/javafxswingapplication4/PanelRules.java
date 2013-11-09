@@ -146,7 +146,23 @@ public class PanelRules {
                 mp.add(temp);
                  
             return mp;
+        }
+        public ArrayList<Point> getKingMovingPositions(int positionX, int positionY, Color col){
+            ArrayList<Point> mp = new ArrayList<Point>();
+            Point temp;
+            temp = getMovingPositions(new Point(positionX, positionY), col, Movement.LEFT);
+            if( temp.x!=0 || temp.y!=0)
+                mp.add(temp);
             
+            temp =getMovingPositions(new Point(positionX, positionY), col, Movement.RIGHT);
+            if( temp.x!=0 || temp.y!=0)
+                mp.add(temp);
+            
+            temp =getMovingPositions(new Point(positionX, positionY), col , Movement.FORWARD);
+            if( temp.x!=0 || temp.y!=0)
+                mp.add(temp);
+                 
+            return mp;
         }
         /**
          * Returns the point of the position given the point of the movement,
@@ -219,10 +235,10 @@ public class PanelRules {
                     //clean previous taboo positions
                     tabooPositions.clear();
                     // get the current movement path
-                    jumpPositions   =  getFirstAvailableSearchTree();                    
+                    jumpPositions   =  getFirstAvailableSearchTree();
 
                     //Check if jump positions is null
-                    if(jumpPositions==null) return tempSearchNode.getMaxPositions();
+                    if(jumpPositions==null) return null;
                     
                     //fill the new taboo positions
                     fillTabooPieces();
@@ -242,11 +258,11 @@ public class PanelRules {
                         Point foo = new Point(Integer.MAX_VALUE,Integer.MAX_VALUE);
                         SearchNode as = new SearchNode(foo, foo, foo);
                         tempSearchNode.get(removeIndex).append(as);
-                        getJumps(p, c,false);
+                        return getJumps(p, c,false);
                     }else
-                        getJumps(p, c,false);
-                }            
-            return null;
+                        return getJumps(p, c,false);
+                }
+                return tempSearchNode.getMaxPositions();
         }
         
         public void addToJumpPositions(Point from ,Point to ,Point  jumps){

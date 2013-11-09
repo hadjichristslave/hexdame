@@ -82,10 +82,4 @@ public class SearchNodeList  implements Cloneable{
             if(max==js.jumpPosition.size()) answer.add(js);
         return answer;
     }
-    public boolean legalMoveExists(){
-        int max=0;
-        for(JumpPosition js:tempSearchNode)
-            if(max<js.jumpPosition.size()) max =js.jumpPosition.size();
-        return max>0;
-    }
 }

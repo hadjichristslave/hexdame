@@ -63,6 +63,8 @@ public class hexgame
 	final static int HEXSIZE = 60;	//hex size in pixels
 	final static int BORDERS = 15;  
 	final static int SCRSIZE = HEXSIZE * (BSIZE + 1) + BORDERS*3; //screen size (vertical dimension).
+        final static int[ ][ ] redKingSquares = {{1,1}, {2,1}, {3,0} ,{4,0}, {5,0} , {6,1}, {7,1}};
+        final static int[ ][ ] blackKingSquares = {{1,6}, {2,7}, {3,7} ,{4,8}, {5,7} , {6,7}, {7,6}};
         
         
 	int[][] board = new int[BSIZE][BSIZE];
@@ -81,8 +83,8 @@ public class hexgame
                 setupGamePieces();
 	}
  
-	private void createAndShowGUI()
-	{
+	private void createAndShowGUI(){
+            
 		DrawingPanel panel = new DrawingPanel();
 		//JFrame.setDefaultLookAndFeelDecorated(true);
 		JFrame frame = new JFrame("HexDame v0.3");
@@ -167,10 +169,31 @@ public class hexgame
                                     if( PanelRules.isValidSquare(i, j)){                                     
                                         Soldier Sold1 = new Soldier(i , j , Color.black);
                                         Soldier Sold2 = new Soldier(i , j , Color.red);
-                                        if(pr.containsSoldier(Sold1, gamePiecesr))
+                                        if(pr.containsSoldier(Sold1, gamePiecesr)){
                                             hexmech.fillcircle(i,j,g2,Sold1.C);
-                                        else if((pr.containsSoldier(Sold2, gamePiecesr)))
-                                            hexmech.fillcircle(i,j,g2,Sold2.C);   
+                                            boolean isKing = false;
+                                            for(Soldier gr:gamePiecesr){
+                                                if(gr.i == Sold1.i && gr.j==Sold1.j && gr.isKing==true)
+                                                    isKing=true;
+                                            }
+                                            if(isKing){
+                                                System.out.println("drew king circles");
+                                                hexmech.fillcircle(i,j,g2,Color.red ,20, 20);
+                                            }
+                                                        
+                                        }
+                                        else if((pr.containsSoldier(Sold2, gamePiecesr))){
+                                            hexmech.fillcircle(i,j,g2,Sold2.C); 
+                                            boolean isKing = false;
+                                            for(Soldier gr:gamePiecesr){
+                                                if(gr.i == Sold2.i && gr.j==Sold2.j && gr.isKing==true)
+                                                    isKing=true;
+                                            }
+                                            if(isKing){
+                                                System.out.println("drew the circle");
+                                                hexmech.fillcircle(i,j,g2,Color.black ,20, 20);
+                                            }
+                                        }
                                     }
                                          
                        // Draw Legal Moves
@@ -198,7 +221,7 @@ public class hexgame
  
 		class MyMouseListener extends MouseAdapter  {	//inner class inside DrawingPanel 
                         @Override
-                        public void mouseClicked(MouseEvent e) {
+                        public void mouseClicked(MouseEvent e ) {
                             ArrayList<Point> legalMoves;
                             Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );
                             Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
@@ -207,27 +230,20 @@ public class hexgame
                             if(pr.containsSoldier(new Soldier(p.x, p.y, colorTurn) , gamePiecesr)){
                                 moves.clear();
                                 currentSelection =  p;
-                                
+                                //Get all the jumps
                                 ArrayList<JumpPosition> answer = new ArrayList<JumpPosition>();
                                 for(int i=0;i<gamePiecesr.size();i++){
                                     Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
                                     if(gamePiecesr.get(i).C==colorTurn){
                                         try {
-                                            ArrayList<JumpPosition> getJump = pr.getJumps(temp,gamePiecesr.get(i).C , true);
-                                            System.out.println(getJump.size());
-                                            System.out.println(getJump==null);
-                                            if(getJump!=null)
-                                                for(JumpPosition jp :getJump){
-                                                    answer.add(jp);
-                                                    jp.print();
-                                                }
+                                            for(JumpPosition jp :pr.getJumps(temp,gamePiecesr.get(i).C,true))
+                                                answer.add(jp);
                                         } catch (CloneNotSupportedException ex) {
                                             Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
                                         }
                                     }
                                 }
-                                for(JumpPosition jp:answer) jp.print();
-                                    
+                                //Get all moves no jumps included
                                 legalMoves = pr.getMovingPositions(p.x, p.y, colorTurn);
                                 if(legalMoves.size()>0){
                                     for(int i = 0;i<legalMoves.size();i++){
@@ -241,7 +257,15 @@ public class hexgame
                                         if(gamePiecesr.get(i).i==currentSelection.x &&gamePiecesr.get(i).j==currentSelection.y){
                                             gamePiecesr.get(i).i = p.x;
                                             gamePiecesr.get(i).j = p.y;
+                                            System.out.println(isKingSquare(p.x, p.y, colorTurn));
+                                            if(isKingSquare(p.x, p.y, colorTurn))
+                                                gamePiecesr.get(i).isKing =true;
+                                            System.out.println(gamePiecesr.get(i).i);
+                                            System.out.println(gamePiecesr.get(i).j);
+                                            System.out.println(gamePiecesr.get(i).C);
+                                            System.out.println(gamePiecesr.get(i).isKing);
                                             pr.updatePieces(gamePiecesr);
+                                            
                                             moves.clear();
                                             currentSelection = new Point(0,0);
                                             CurrentTurn = CurrentTurn==CurrentTurn.BLACK?CurrentTurn.RED:CurrentTurn.BLACK;
@@ -254,4 +278,19 @@ public class hexgame
                         
 		} //end of MyMouseListener class 
 	} // end of DrawingPanel class   
+        public boolean isKingSquare(int x, int y , Color c){
+            if(c ==Color.black){
+                for(int i=0;i<7;i++){
+                    if(x==blackKingSquares[i][0] && y==blackKingSquares[i][1])
+                        return true;
+                }
+                
+            }else if(c==Color.red){
+                 for(int i=0;i<7;i++){
+                    if(x==redKingSquares[i][0] && y==redKingSquares[i][1])
+                        return true;
+                }
+            }
+            return false;
+        }
 }
