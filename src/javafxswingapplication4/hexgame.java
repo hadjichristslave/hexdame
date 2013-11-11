@@ -176,10 +176,9 @@ public class hexgame
                                                 if(gr.i == Sold1.i && gr.j==Sold1.j && gr.isKing==true)
                                                     isKing=true;
                                             }
-                                            if(isKing){
-                                                System.out.println("drew king circles");
+                                            if(isKing)
                                                 hexmech.fillcircle(i,j,g2,Color.red ,20, 20);
-                                            }
+                                            
                                                         
                                         }
                                         else if((pr.containsSoldier(Sold2, gamePiecesr))){
@@ -189,10 +188,9 @@ public class hexgame
                                                 if(gr.i == Sold2.i && gr.j==Sold2.j && gr.isKing==true)
                                                     isKing=true;
                                             }
-                                            if(isKing){
-                                                System.out.println("drew the circle");
+                                            if(isKing)
                                                 hexmech.fillcircle(i,j,g2,Color.black ,20, 20);
-                                            }
+                                            
                                         }
                                     }
                                          
@@ -231,11 +229,18 @@ public class hexgame
                                 moves.clear();
                                 currentSelection =  p;
                                 //Get all the jumps
+                                
                                 ArrayList<JumpPosition> answer = new ArrayList<JumpPosition>();
                                 for(int i=0;i<gamePiecesr.size();i++){
+                                    JumpPosition sdf = new JumpPosition();
+                                    
+                                    
                                     Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
                                     if(gamePiecesr.get(i).C==colorTurn){
                                         try {
+                                            Point another = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
+                                            if(gamePiecesr.get(i).isKing)
+                                                pr.kingJumpPositions(another,colorTurn,true);
                                             for(JumpPosition jp :pr.getJumps(temp,gamePiecesr.get(i).C,true))
                                                 answer.add(jp);
                                         } catch (CloneNotSupportedException ex) {

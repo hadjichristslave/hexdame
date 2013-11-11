@@ -30,6 +30,9 @@ public class PanelRules {
       * An array containing taboo points, positions on the map already jumped
       */     
      private ArrayList<Point>      tabooPositions = new ArrayList<Point>();
+     
+     private ArrayList<OrientationMove>      orientationMoveCombs = new ArrayList<OrientationMove>();
+     
 
      enum Orientation {UP, DOWN};
      enum Movement {LEFT, RIGHT , FORWARD};     
@@ -37,6 +40,12 @@ public class PanelRules {
      
      public PanelRules(ArrayList<Soldier> gamePieces){
          this.gamePieces = gamePieces;
+         orientationMoveCombs.add(new OrientationMove(Orientation.UP, Movement.LEFT));
+         orientationMoveCombs.add(new OrientationMove(Orientation.UP, Movement.RIGHT));
+         orientationMoveCombs.add(new OrientationMove(Orientation.UP, Movement.FORWARD));
+         orientationMoveCombs.add(new OrientationMove(Orientation.DOWN, Movement.RIGHT));
+         orientationMoveCombs.add(new OrientationMove(Orientation.DOWN, Movement.FORWARD));
+         orientationMoveCombs.add(new OrientationMove(Orientation.DOWN, Movement.LEFT));
      }
      public void updatePieces(ArrayList<Soldier> gamePieces){
          this.gamePieces = gamePieces;
@@ -73,6 +82,16 @@ public class PanelRules {
             for (int i=0;i<gamePiece.size();i++)
                 if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j && test.C.equals(gamePiece.get(i).C))
                     return true;
+            return false;
+        }
+        public boolean containsSoldier(Soldier test, ArrayList<Soldier> gamePiece , boolean foo){
+            for (int i=0;i<gamePiece.size();i++){
+                if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j && test.C.equals(gamePiece.get(i).C)){
+                    System.out.println(test.C.toString());
+                    System.out.println(gamePiece.get(i).C.toString());
+                    return true;
+                }
+            }
             return false;
         }
         /**
@@ -149,7 +168,6 @@ public class PanelRules {
             Orientation or = color==Color.black?Orientation.DOWN:Orientation.UP;
             Color oposite  = color==Color.black?Color.red:Color.black;
             Point soldierPoint = getXandYgivenOrientation(c, or, m);
-            
             Soldier friend = new Soldier(soldierPoint.x,soldierPoint.y,color);
             Soldier foe    = new Soldier(soldierPoint.x,soldierPoint.y,oposite);
             if(!containsSoldier(friend, gamePieces) && !containsSoldier(foe, gamePieces))
@@ -161,29 +179,15 @@ public class PanelRules {
             return new Point(0,0);
         }
         /**
-         * 
          * returns the moves of a king piece
-         * 
-         * 
          * */
         public ArrayList<Point> getKingMovingPositions(int positionX, int positionY, Color col){
             ArrayList<Point> mp = new ArrayList<Point>();
             ArrayList<Point> moves  = new ArrayList<Point>();
-            moves = getKingMovingPositions(new Point(positionX, positionY), col, Movement.LEFT , Orientation.DOWN);
-                if( moves.size()>0)    mp.addAll(moves);            
-            moves = getKingMovingPositions(new Point(positionX, positionY), col, Movement.RIGHT , Orientation.DOWN);
-                if( moves.size()>0)    mp.addAll(moves);            
-            moves = getKingMovingPositions(new Point(positionX, positionY), col , Movement.FORWARD , Orientation.DOWN);
+            for(OrientationMove orM:orientationMoveCombs){
+                moves = getKingMovingPositions(new Point(positionX, positionY), col, orM.m , orM.or);
                 if( moves.size()>0)    mp.addAll(moves);
-            moves = getKingMovingPositions(new Point(positionX, positionY), col, Movement.LEFT , Orientation.UP);
-                if( moves.size()>0)    mp.addAll(moves);            
-            moves = getKingMovingPositions(new Point(positionX, positionY), col, Movement.RIGHT , Orientation.UP);
-                if( moves.size()>0)    mp.addAll(moves);            
-            moves = getKingMovingPositions(new Point(positionX, positionY), col , Movement.FORWARD , Orientation.UP);
-                if( moves.size()>0)    mp.addAll(moves);
-                
-            for(Point p:mp) System.out.println(p.toString());
-            
+            }
             return mp;
         }
         public ArrayList<Point> getKingMovingPositions(Point c , Color color , Movement m, Orientation or){
@@ -194,18 +198,144 @@ public class PanelRules {
             for(int i=0;i<8;i++){
                 if(i!=0) currentPos = getXandYgivenOrientation(currentPos, or, m);
                 if(!isValidSquare(currentPos.x, currentPos.y)) break;
-                Soldier friend = new Soldier(soldierPoint.x,soldierPoint.y,color);
-                Soldier foe    = new Soldier(soldierPoint.x,soldierPoint.y,oposite);
+                Soldier friend = new Soldier(currentPos.x,currentPos.y,color);
+                Soldier foe    = new Soldier(currentPos.x,currentPos.y,oposite);
                 if(!containsSoldier(friend, gamePieces) && !containsSoldier(foe, gamePieces))
                     validMultiJumpSquares.add(currentPos);
                 else return   validMultiJumpSquares;
             }
             return validMultiJumpSquares;
         }
+        
+        public ArrayList<Point> getKingJumpingPositions(Point c , Color color , Movement m, Orientation or , boolean initial){
+            ArrayList<Point> validMultiJumpSquares = new ArrayList<Point>();
+            Color oposite  = color==Color.black?Color.red:Color.black;
+            Point currentPos = getXandYgivenOrientation(c, or, m);
+            for(int i=0;i<8;i++){
+                if(i!=0) currentPos = getXandYgivenOrientation(currentPos, or, m);
+                if(isValidSquare(currentPos.x, currentPos.y)){
+                    Point nextPos  = getXandYgivenOrientation(currentPos, or, m);
+                    Soldier foe    = new Soldier(currentPos.x,currentPos.y,oposite);
+                    Soldier nextPoint = new Soldier(nextPos.x, nextPos.y, Color.WHITE);
+                    if(containsSoldier(foe, gamePieces , true) && isValidSquare(nextPos.x, nextPos.y) && isEmpty(nextPoint, gamePieces)){
+                        System.out.println("will go from " + c.toString()  + " to " +nextPos.toString()+ " jumping "+ currentPos.toString() );
+                        ArrayList<SearchNode> foo = new ArrayList<SearchNode>();
+                        foo.add(new SearchNode(c,nextPos,currentPos));
+                        JumpPosition jp = new JumpPosition(foo);
+                        jp.setOrientationAndMovement(or, m);
+                        tempSearchNode.add(jp);
+                        validMultiJumpSquares.add(nextPos);
+                        break;
+                    }
+                }                
+                else return  validMultiJumpSquares;
+            }
+            return validMultiJumpSquares;
+        }
+        public void addAllRelevantSquares(JumpPosition jumpPosit, Point foo, Point nextPoint, 
+                                          Point soldierPoint, Orientation or, Movement m ,
+                                          Color oposite ) throws CloneNotSupportedException{
+            for(int k=0;k<6;k++){
+                if(k==0){
+                    JumpPosition newList;
+                    newList = (JumpPosition) jumpPositions.clone();
+                    newList.setOrientationAndMovement(or, m);
+                    tempSearchNode.add(new SearchNode(foo, nextPoint, soldierPoint) , newList);
+                    jumpPosit.setSearched(or, m);
+                }
+                else{
+                    nextPoint            = getXandYgivenOrientation(nextPoint, or,m);
+                    Soldier emptySquare  = new Soldier(nextPoint.x, nextPoint.y, oposite);
+                    if(nextPoint.x != foo.x && nextPoint.y!= foo.y){
+                        if(isValidSquare(nextPoint.x, nextPoint.y) && isEmpty(emptySquare, gamePieces)){
+                            JumpPosition newList;
+                            newList = (JumpPosition) jumpPositions.clone();
+                            newList.setOrientationAndMovement(or, m);
+                            tempSearchNode.add(new SearchNode(foo, nextPoint, soldierPoint) , newList);
+                            jumpPosit.setSearched(or, m);
+                        }
+                    }
+                    else break;
+                }
+            }
+        
+        }
+         private void getKingJumpPos(Point kingPoint, Orientation or, Movement m, JumpPosition jumpPosit,Color c, boolean b) throws CloneNotSupportedException {
+            //Take the last position of the movement as current point
+             Point foo = jumpPositions.jumpPosition.get(jumpPositions.jumpPosition.size()-1).to;
+             Color oposite  = c==Color.black?Color.red:Color.black;
+             Point currentPoint = foo;
+             Point soldierPoint , nextPoint;
+             
+             for(int i=0;i<8;i++){
+                if(i!=0) currentPoint = getXandYgivenOrientation(currentPoint, or,m);
+                if( !isValidSquare(currentPoint.x, currentPoint.y)) break;
+                for(OrientationMove orM:orientationMoveCombs){
+                    soldierPoint         = getXandYgivenOrientation(currentPoint, orM.or,orM.m);
+                    nextPoint            = getXandYgivenOrientation(soldierPoint, orM.or,orM.m);
+                    Soldier foe          = new Soldier(soldierPoint.x, soldierPoint.y, oposite);
+                    Soldier emptySquare  = new Soldier(nextPoint.x, nextPoint.y, oposite);
+                    
+                    if(isJumpable(soldierPoint, orM.or, orM.m, c , jumpPosit))
+                        addAllRelevantSquares(jumpPosit,  foo, nextPoint, soldierPoint, orM.or, orM.m ,oposite );
+                    
+                }
+            }
+                
+                 
+                
+                //If it is, add it to the movement path
+//                if(isJumpable(soldierPoint, or, m, c , jumpPositions)){                       
+//                    addOnlyToTempJumpPositions(foo, getXandYgivenOrientation(soldierPoint, or,m) , soldierPoint ,jumpPosit , or, m);
+//                }
+        
+        }
+        public ArrayList<JumpPosition> kingJumpPositions(Point kingPoint, Color c , boolean initial) throws CloneNotSupportedException{
+             if(initial==true){
+                 tempSearchNode.clear();
+                 jumpPositions              = new JumpPosition(new ArrayList<SearchNode>());
+                 for(OrientationMove orM :orientationMoveCombs)
+                    getKingJumpingPositions(kingPoint , c , orM.m, orM.or ,true);
+                 //Continue with dfs checking for multi jumps
+                 kingJumpPositions(kingPoint,c ,false);
+                }else{
+                    tabooPositions.clear();
+                    jumpPositions   =  getFirstAvailableSearchTree();
+                    if(jumpPositions==null) {
+                        tempSearchNode.print();
+                        return null;
+                    }
+                    fillTabooPieces();
+                    //Get the current index and size before the DFS operation changes ig
+                    int removeIndex = getFirstAvailableIndex();
+                    int currentSize = tempSearchNode.size();
+                     // Make a new DFS with the path as input
+                    getKingJumpPos(kingPoint,jumpPositions.or, jumpPositions.m, jumpPositions,c,false);
+                    
+                    //Check if the size of the search tree has gotten bigger
+                    if(currentSize == tempSearchNode.size()){
+                        Point foo = new Point(Integer.MAX_VALUE,Integer.MAX_VALUE);
+                        SearchNode as = new SearchNode(foo, foo, foo);
+                        tempSearchNode.get(removeIndex).append(as);
+                        return kingJumpPositions(kingPoint, c,false);
+                    }else
+                        return kingJumpPositions(kingPoint, c,false);
+                
+             }
+             return tempSearchNode.getMaxPositions();            
+        }
+        
+        public void addJumpAndMultiSquareJump(Point from , Point to, Point jumps, Orientation or, Movement m , Color c ){
+            addToJumpPositions(from, getXandYgivenOrientation(jumps, or,m) , jumps);
+            Point soldierPoint = to;
+            for(int i=0;i<6;i++){
+                soldierPoint = getXandYgivenOrientation(soldierPoint, or, m);
+                if(!isValidSquare(soldierPoint.x, soldierPoint.y)) break;
+            }
+        }
         /**
          * A Depth first search for possible jumping positions.
          * Results are passed to jumpPositions list
-         * 
          * 
          * */
         public int dFSJumps(Point p, Color c, Orientation or, Movement m){
@@ -227,11 +357,12 @@ public class PanelRules {
             }
             return 0;
         }
-       /**
+       
+        /**
         * 
-        * Recursive jumps estimator
+        * Recursive MultiJump estimator
         * 
-        * */
+        * */        
         public ArrayList<JumpPosition> getJumps(Point p, Color c , boolean initial) throws CloneNotSupportedException {
                 if(initial){
                     //For every search, clear the tempSearch and jump positions
@@ -239,22 +370,15 @@ public class PanelRules {
                  jumpPositions              = new JumpPosition(new ArrayList<SearchNode>());
 
                  //Make the DFS search clockwise starting from up and left
-                 dFSJumps(p,c,Orientation.UP, Movement.LEFT);
-                 dFSJumps(p,c,Orientation.UP, Movement.FORWARD);
-                 dFSJumps(p,c,Orientation.UP, Movement.RIGHT);
-                 dFSJumps(p,c,Orientation.DOWN, Movement.RIGHT);
-                 dFSJumps(p,c,Orientation.DOWN, Movement.FORWARD);
-                 dFSJumps(p,c,Orientation.DOWN, Movement.LEFT);
+                 for(OrientationMove orM:orientationMoveCombs)
+                    dFSJumps(p,c,orM.or, orM.m);
                  //Continue with dfs checking for multi jumps
                  getJumps(p,c ,false);
                 }else{
-                    //Check for multijumps
-
                     //clean previous taboo positions
                     tabooPositions.clear();
                     // get the current movement path
                     jumpPositions   =  getFirstAvailableSearchTree();
-
                     //Check if jump positions is null
                     if(jumpPositions==null) return null;
                     
@@ -265,12 +389,8 @@ public class PanelRules {
                     int currentSize = tempSearchNode.size();
                      // Make a new DFS with the path as input
                     //System.out.println("New iteration in dfs");
-                    dFSJumps(c,Orientation.UP, Movement.LEFT, jumpPositions,false);
-                    dFSJumps(c,Orientation.UP, Movement.FORWARD, jumpPositions ,false);
-                    dFSJumps(c,Orientation.UP, Movement.RIGHT, jumpPositions ,false); 
-                    dFSJumps(c,Orientation.DOWN, Movement.RIGHT, jumpPositions,false);
-                    dFSJumps(c,Orientation.DOWN, Movement.FORWARD, jumpPositions,false);
-                    dFSJumps(c,Orientation.DOWN, Movement.LEFT, jumpPositions,false);
+                    for(OrientationMove orM:orientationMoveCombs)
+                        dFSJumps(c,orM.or, orM.m, jumpPositions,false);
                     //Check if the size of the search tree has gotten bigger
                     if(currentSize == tempSearchNode.size()){
                         Point foo = new Point(Integer.MAX_VALUE,Integer.MAX_VALUE);
@@ -281,6 +401,24 @@ public class PanelRules {
                         return getJumps(p, c,false);
                 }
                 return tempSearchNode.getMaxPositions();
+        }        
+        
+        public void addToJumpKingPositions(Point from ,Point to ,Point  jumps , Orientation or, Movement m){
+            ArrayList<SearchNode> foo = new ArrayList<SearchNode>();
+            foo.add(new SearchNode(from,to,jumps));
+            JumpPosition jp = new JumpPosition(foo);
+            tempSearchNode.add(jp);
+            Point nextPoint = to;
+            for(int i =0;i<7;i++){
+                nextPoint = getXandYgivenOrientation(nextPoint, or, m);
+                if(isValidSquare(nextPoint.x, nextPoint.y) && isEmpty(new Soldier(nextPoint.x, nextPoint.y, Color.red), gamePieces)){
+                    foo = new ArrayList<SearchNode>();
+                    foo.add(new SearchNode(from,nextPoint,jumps));
+                    jp = new JumpPosition(foo);
+                    tempSearchNode.add(jp);
+                }
+                else break;
+            }   
         }
         
         public void addToJumpPositions(Point from ,Point to ,Point  jumps){
@@ -289,13 +427,12 @@ public class PanelRules {
             JumpPosition jp = new JumpPosition(foo);
             tempSearchNode.add(jp);
         }
-        
         public void addOnlyToTempJumpPositions(Point from ,Point to ,Point  jumps ,JumpPosition jumpPosit ,Orientation or, Movement m) throws CloneNotSupportedException{
             //modify it for no future or and m movement
             jumpPosit.setSearched(or, m);
             //Clone to pass by value and not let the other values be modified
             JumpPosition snl = (JumpPosition) jumpPosit.clone();
-            tempSearchNode.add(new SearchNode(from,to,jumps) , snl);            
+            tempSearchNode.add(new SearchNode(from,to,jumps) , snl);
         }
         
         public boolean isJumpable(Point p , Orientation or, Movement m, Color c){
@@ -316,7 +453,6 @@ public class PanelRules {
         public boolean isJumpable(Point p , Orientation or, Movement m, Color c , JumpPosition jumplocations){
             //If the point continuing the movement is empty and the current point is the soldier we are looking for,
             //return true.
-            
             Point sP = getXandYgivenOrientation(p, or, m);
             Color oposite = c==Color.black?Color.red:Color.black;            
             

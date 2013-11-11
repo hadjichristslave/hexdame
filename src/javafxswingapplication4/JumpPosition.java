@@ -23,6 +23,8 @@ public class JumpPosition implements Cloneable {
     public boolean searchedDOWNandLEFT     = false;
     public boolean searchedDOWNandRIGHT    = false;
     public boolean searchedDOWNandFORWARD  = false;
+    public Orientation or;
+    public Movement m;
     
     public JumpPosition(ArrayList<SearchNode> jp){
         this.jumpPosition = jp;
@@ -31,6 +33,10 @@ public class JumpPosition implements Cloneable {
     
     public void append(SearchNode s){
         jumpPosition.add(s);
+    }
+    public void setOrientationAndMovement(Orientation or , Movement m){
+        this.or = or;
+        this.m  = m;
     }
     public ArrayList<SearchNode> getPosition(){
         return this.jumpPosition;
@@ -117,8 +123,10 @@ public class JumpPosition implements Cloneable {
         SearchNode s = new SearchNode(x, x, x);
         append(s);
     }
-    @Override
+    
     protected Object clone() throws CloneNotSupportedException {
+//        JumpPosition s = new JumpPosition(jumpPosition);
+//        return s;
         return super.clone();
     }
     
