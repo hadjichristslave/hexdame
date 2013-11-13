@@ -11,7 +11,7 @@
   </resources>
   <resources>
     <j2se version="1.6+" java-vm-args="-Djava.security.policy=applet.policy "  href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="JavaFXSwingApplication4.jar" size="48664" download="eager" />
+    <jar href="JavaFXSwingApplication4.jar" size="53637" download="eager" />
   </resources>
 <security>
   <all-permissions/>

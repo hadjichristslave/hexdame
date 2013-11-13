@@ -33,6 +33,8 @@ public class PanelRules {
      
      private ArrayList<OrientationMove>      orientationMoveCombs = new ArrayList<OrientationMove>();
      
+    
+     
 
      enum Orientation {UP, DOWN};
      enum Movement {LEFT, RIGHT , FORWARD};     
@@ -55,7 +57,7 @@ public class PanelRules {
                ||(i==1||i==7) && (j>0 && j<7)
                ||(i==2||i==6) && (j>0 && j<8)
                ||(i==3||i==5) && (j>=0 && j<8)
-               || (i==4))
+               || (i==4) && (j>=0 && j<9))
                 return true;
             return false;
         }
@@ -253,7 +255,7 @@ public class PanelRules {
                             newList.setOrientationAndMovement(or, m);
                             tempSearchNode.add(new SearchNode(foo, nextPoint, soldierPoint) , newList);
                             jumpPosit.setSearched(or, m);
-                        }
+                        }else break;
                     }
                     else break;
                 }
@@ -301,10 +303,8 @@ public class PanelRules {
                 }else{
                     tabooPositions.clear();
                     jumpPositions   =  getFirstAvailableSearchTree();
-                    if(jumpPositions==null) {
-                        tempSearchNode.print();
+                    if(jumpPositions==null)
                         return null;
-                    }
                     fillTabooPieces();
                     //Get the current index and size before the DFS operation changes ig
                     int removeIndex = getFirstAvailableIndex();
@@ -439,7 +439,8 @@ public class PanelRules {
             Point sP = getXandYgivenOrientation(p, or, m);
             Color oposite = c==Color.black?Color.red:Color.black;
             if(isEmpty(new Soldier(sP.x, sP.y, Color.WHITE), gamePieces)
-            && containsSoldier(new Soldier(p.x, p.y,oposite), gamePieces)) return true;          
+            && containsSoldier(new Soldier(p.x, p.y,oposite), gamePieces)
+            && isValidSquare(sP.x, sP.y)) return true;          
             return false;
         }
         /**
