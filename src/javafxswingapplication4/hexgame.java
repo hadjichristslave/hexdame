@@ -63,8 +63,8 @@ public class hexgame
 	final static int HEXSIZE = 60;	//hex size in pixels
 	final static int BORDERS = 15;  
 	final static int SCRSIZE = HEXSIZE * (BSIZE + 1) + BORDERS*3; //screen size (vertical dimension).
-        final static int[ ][ ] redKingSquares = {{1,1}, {2,1}, {3,0} ,{4,0}, {5,0} , {6,1}, {7,1}};
-        final static int[ ][ ] blackKingSquares = {{1,6}, {2,7}, {3,7} ,{4,8}, {5,7} , {6,7}, {7,6}};
+        final static int[ ][ ] redKingSquares = {{0,2},{1,1}, {2,1}, {3,0} ,{4,0}, {5,0} , {6,1}, {7,1} ,{8,2}};
+        final static int[ ][ ] blackKingSquares = {{0,6}, {1,6}, {2,7}, {3,7} ,{4,8}, {5,7} , {6,7}, {7,6} , {8,6}};
         
         private ArrayList<Soldier>      captureSoldierPositionAndColor = new ArrayList<Soldier>();
         
@@ -223,12 +223,16 @@ public class hexgame
 		class MyMouseListener extends MouseAdapter  {	//inner class inside DrawingPanel 
                         @Override
                         public void mouseClicked(MouseEvent e ) {
+                            
                             ArrayList<Point> legalMoves;
-                            Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );
+                            Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );                            
                             Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
                             Color invcolorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
+                            
+                            getLegalMoves(colorTurn);
+                            
                             ArrayList<JumpPosition> listOfAllJumps;
-                            if(pr.containsSoldier(new Soldier(p.x, p.y, colorTurn) , gamePiecesr)){
+                            if(pr.containsSoldier(new Soldier(p.x, p.y, colorTurn) , gamePiecesr) && PanelRules.isValidSquare(p.x, p.y)){
                                 //Clear the moves for multijumps of kings and soldiers
                                 captureSoldierPositionAndColor.clear();
                                 //Clear the normal moves of kings and soldiers
@@ -236,44 +240,39 @@ public class hexgame
                                 currentSelection =  p;
                                 //Get all the jumps
                                 boolean jumpsExist = false;
-                                
+                                int maxJumpCount = getMaxJump(colorTurn);
                                 for(int i=0;i<gamePiecesr.size();i++){
                                     JumpPosition sdf = new JumpPosition();
                                     listOfAllJumps = new ArrayList<>();
-                                    
                                     Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
                                     if(gamePiecesr.get(i).C==colorTurn){
                                         try {
-                                            //Get the point that we are checking
-                                            Point another = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
-                                            
                                             //Search for jumps if a pawn is a king
-                                            if(gamePiecesr.get(i).isKing){
-                                                listOfAllJumps = pr.kingJumpPositions(another,colorTurn,true);
-                                                if (listOfAllJumps.size()>0) jumpsExist=true;
-                                                
-                                            }
+                                            if(gamePiecesr.get(i).isKing)
+                                                listOfAllJumps = pr.kingJumpPositions(temp,colorTurn,true);
                                             //Check for normal jumps
                                             listOfAllJumps.addAll(pr.getJumps(temp,gamePiecesr.get(i).C,true));
-                                            if(listOfAllJumps.size()>0)   jumpsExist = true;
+                                            
                                             //If jumps exist, pass the soldiers jumped to one array, and the
                                             int size = 24;
                                             Random rand = new Random();
                                             Color c = new Color(rand.nextFloat(),rand.nextFloat(),rand.nextFloat());
                                             for(JumpPosition jp :listOfAllJumps){
-                                                int offset = jp.jumpPosition.size()==1?1:2;
-                                                Point reaches = jp.jumpPosition.get(jp.jumpPosition.size()-offset).to;
-                                                c = new Color(rand.nextFloat(),rand.nextFloat(),rand.nextFloat());
-                                                size = size -3;
-                                                for(SearchNode sN:jp.jumpPosition){
-                                                    SearchNode from = jp.jumpPosition.get(0);
-                                                    if(from.from.x == currentSelection.x && from.from.y == currentSelection.y){
-                                                        System.out.println("from " + from.from.toString() + " reaches "+reaches.toString() );
-                                                        captureSoldierPositionAndColor.add(new Soldier(sN.jumps.x , sN.jumps.y, size, c , reaches , from.from));
-                                                        moves.add(reaches);
+                                                if(jp.jumpPosition.size()== maxJumpCount){
+                                                    jumpsExist=true;
+                                                    int offset = jp.jumpPosition.size()==1?1:2;
+                                                    Point reaches = jp.jumpPosition.get(jp.jumpPosition.size()-offset).to;
+                                                    c = new Color(rand.nextFloat(),rand.nextFloat(),rand.nextFloat());
+                                                    size = size -3;
+                                                    for(SearchNode sN:jp.jumpPosition){
+                                                        SearchNode from = jp.jumpPosition.get(0);
+                                                        if(from.from.x == currentSelection.x && from.from.y == currentSelection.y){
+                                                            System.out.println("from " + from.from.toString() + " reaches "+reaches.toString() );
+                                                            captureSoldierPositionAndColor.add(new Soldier(sN.jumps.x , sN.jumps.y, size, c , reaches , from.from));
+                                                            moves.add(reaches);
+                                                        }
                                                     }
                                                 }
-                                                
                                             }
                                            ArrayList<JumpPosition> tempJp = pr.getJumps(temp,gamePiecesr.get(i).C,true);
                                            if(tempJp.size()>0) jumpsExist=true;
@@ -289,7 +288,8 @@ public class hexgame
                                         ArrayList<Point> asdf  = new ArrayList<Point>();
                                         Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
                                         if(gamePiecesr.get(i).isKing && gamePiecesr.get(i).C==colorTurn)
-                                            asdf= pr.getKingMovingPositions(temp.x, temp.y, colorTurn);
+                                            if(gamePiecesr.get(i).i == currentSelection.x && gamePiecesr.get(i).j == currentSelection.y)
+                                                asdf= pr.getKingMovingPositions(temp.x, temp.y, colorTurn);
                                         if(asdf.size()>0)
                                             for(Point P:asdf)
                                                 moves.add(P);
@@ -304,7 +304,8 @@ public class hexgame
                                     }
                                 }
                             }else if( pr.containsSoldier(new Soldier(currentSelection.x, currentSelection.y, colorTurn),gamePiecesr)
-                                    && pr.isLegalMove(new Point(p.x, p.y),moves)){
+                                    && pr.isLegalMove(new Point(p.x, p.y),moves)
+                                    && PanelRules.isValidSquare(p.x, p.y)){
                                     for(int i=0;i<gamePiecesr.size();i++){
                                         if(captureSoldierPositionAndColor.size()==0){
                                             if(gamePiecesr.get(i).i==currentSelection.x &&gamePiecesr.get(i).j==currentSelection.y){
@@ -316,18 +317,18 @@ public class hexgame
                                                 }
                                         }else{
                                             boolean soldiersCaptured= false;
-                                             if(gamePiecesr.get(i).i==currentSelection.x &&gamePiecesr.get(i).j==currentSelection.y){
-                                                 moveTo(i,  p);
+                                            Soldier currentSol = gamePiecesr.get(i);
+                                             if(currentSol.i==currentSelection.x &&currentSol.j==currentSelection.y){
+                                                 moveTo(i,  p); 
                                                  for(Soldier Sol:captureSoldierPositionAndColor){
                                                      if(Sol.jumpsTo.equals(p)
                                                       &&Sol.jumpsFrom.equals(currentSelection)){
                                                          if(isKingSquare(p.x, p.y, colorTurn))
-                                                             gamePiecesr.get(i).isKing =true;
+                                                             currentSol.isKing =true;
                                                          
                                                          for(Iterator< Soldier > soldier = gamePiecesr.iterator(); soldier.hasNext();){
                                                              Soldier fooSol = soldier.next();
                                                              if (fooSol.i == Sol.i && fooSol.j ==Sol.j){
-                                                                 System.out.println("Tracked soldier to kill");
                                                                  soldier.remove();
                                                                  soldiersCaptured=true;
                                                              }
@@ -343,7 +344,7 @@ public class hexgame
                                     }
                                 }
                             
-                            repaint();                            
+                            repaint();                        
                         }
                         
 		} //end of MyMouseListener class 
@@ -362,17 +363,77 @@ public class hexgame
         }
         public boolean isKingSquare(int x, int y , Color c){
             if(c ==Color.black){
-                for(int i=0;i<7;i++){
+                for(int i=0;i<9;i++){
                     if(x==blackKingSquares[i][0] && y==blackKingSquares[i][1])
                         return true;
                 }
                 
             }else if(c==Color.red){
-                 for(int i=0;i<7;i++){
+                 for(int i=0;i<9;i++){
                     if(x==redKingSquares[i][0] && y==redKingSquares[i][1])
                         return true;
                 }
             }
             return false;
+        }
+        public int getMaxJump(Color colorTurn){
+            int maxJumpCount = 0;
+            for(int i=0;i<gamePiecesr.size();i++){
+                ArrayList<JumpPosition> listOfAllJumps = new ArrayList<>();
+                if(gamePiecesr.get(i).C==colorTurn){
+                    Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
+                        try {
+                            if(gamePiecesr.get(i).isKing)
+                                listOfAllJumps = pr.kingJumpPositions(temp,colorTurn,true);
+                            listOfAllJumps.addAll(pr.getJumps(temp,gamePiecesr.get(i).C,true));
+                            for(JumpPosition jP:listOfAllJumps)
+                                if(jP.jumpPosition.size()>maxJumpCount) maxJumpCount =jP.jumpPosition.size();
+                        } catch (CloneNotSupportedException ex) {
+                            Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                }
+            }
+            return maxJumpCount;
+        }
+        public void getLegalMoves(Color colorTurn){
+            ArrayList<Point> legalMoves = new ArrayList<>();
+            ArrayList<JumpPosition> listOfAllJumps = new ArrayList<>();
+                //Get all the jumps
+                boolean jumpsExist = false;
+                for(int i=0;i<gamePiecesr.size();i++){
+                    Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
+                    if(gamePiecesr.get(i).C==colorTurn){
+                        try {
+                            //Search for jumps if a pawn is a king
+                            if(gamePiecesr.get(i).isKing)
+                                listOfAllJumps.addAll(pr.kingJumpPositions(temp,colorTurn,true));
+                            //Check for normal jumps
+                            listOfAllJumps.addAll(pr.getJumps(temp,gamePiecesr.get(i).C,true));
+
+                           ArrayList<JumpPosition> tempJp = pr.getJumps(temp,gamePiecesr.get(i).C,true);
+                           if(tempJp.size()>0) jumpsExist=true;
+                        } catch (CloneNotSupportedException ex) {
+                            Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+                if(!jumpsExist){
+                    for(int i=0;i<gamePiecesr.size();i++){ 
+                        Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
+                        if(gamePiecesr.get(i).isKing && gamePiecesr.get(i).C==colorTurn)
+                            if(gamePiecesr.get(i).i == currentSelection.x && gamePiecesr.get(i).j == currentSelection.y)
+                                legalMoves.addAll(pr.getKingMovingPositions(temp.x, temp.y, colorTurn));
+                        //Get all moves no jumps included
+                        legalMoves.addAll(pr.getMovingPositions(temp.x, temp.y, colorTurn));
+                    }
+                    //Add a new point to the pos
+                }
+                for(JumpPosition jP:listOfAllJumps){
+                    jP.print(true);
+                }
+                for(Point pd :legalMoves ){
+                    System.out.println(pd.toString());
+                }
+            
         }
 }

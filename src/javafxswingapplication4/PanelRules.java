@@ -214,12 +214,24 @@ public class PanelRules {
             Color oposite  = color==Color.black?Color.red:Color.black;
             Point currentPos = getXandYgivenOrientation(c, or, m);
             for(int i=0;i<8;i++){
+                Soldier previousPos   =  new Soldier(currentPos.x ,currentPos.y, oposite);;
                 if(i!=0) currentPos = getXandYgivenOrientation(currentPos, or, m);
                 if(isValidSquare(currentPos.x, currentPos.y)){
                     Point nextPos  = getXandYgivenOrientation(currentPos, or, m);
                     Soldier foe    = new Soldier(currentPos.x,currentPos.y,oposite);
                     Soldier nextPoint = new Soldier(nextPos.x, nextPos.y, Color.WHITE);
-                    if(containsSoldier(foe, gamePieces , true) && isValidSquare(nextPos.x, nextPos.y) && isEmpty(nextPoint, gamePieces)){
+                    
+                    Soldier friend    = new Soldier(currentPos.x,currentPos.y,color);
+                    if(containsSoldier(friend , gamePieces,true)) break;
+                    
+                    Soldier nextSol = new Soldier(nextPos.x , nextPos.y,oposite);
+                    if(containsSoldier(foe , gamePieces,true)&& containsSoldier(nextSol , gamePieces,true))
+                        break;
+
+                    
+                    if(containsSoldier(foe, gamePieces , true) 
+                    && isValidSquare(nextPos.x, nextPos.y) 
+                    && isEmpty(nextPoint, gamePieces)){
                         System.out.println("will go from " + c.toString()  + " to " +nextPos.toString()+ " jumping "+ currentPos.toString() );
                         ArrayList<SearchNode> foo = new ArrayList<SearchNode>();
                         foo.add(new SearchNode(c,nextPos,currentPos));
@@ -227,35 +239,50 @@ public class PanelRules {
                         jp.setOrientationAndMovement(or, m);
                         tempSearchNode.add(jp);
                         validMultiJumpSquares.add(nextPos);
-                        break;
+                        
+                        for(int iq=0;iq<6;iq++){
+                            nextPos = getXandYgivenOrientation(nextPos, or, m);
+                            if(isEmpty(new Soldier(nextPos.x, nextPos.y, Color.WHITE), gamePieces)){
+                                foo = new ArrayList<SearchNode>();
+                                foo.add(new SearchNode(c,nextPos,currentPos));
+                                jp = new JumpPosition(foo);
+                                jp.setOrientationAndMovement(or, m);
+                                tempSearchNode.add(jp);
+                                validMultiJumpSquares.add(nextPos);
+                            }else break;
+                        }
+                        //break;
                     }
                 }                
-                else return  validMultiJumpSquares;
+                else break;
             }
             return validMultiJumpSquares;
         }
-        public void addAllRelevantSquares(JumpPosition jumpPosit, Point foo, Point nextPoint, 
+        public void addAllRelevantSquares(JumpPosition jumpPosit, Point foo, Point nextPointz, 
                                           Point soldierPoint, Orientation or, Movement m ,
                                           Color oposite ) throws CloneNotSupportedException{
             for(int k=0;k<6;k++){
                 if(k==0){
-                    JumpPosition newList;
-                    newList = (JumpPosition) jumpPositions.clone();
-                    newList.setOrientationAndMovement(or, m);
-                    tempSearchNode.add(new SearchNode(foo, nextPoint, soldierPoint) , newList);
-                    jumpPosit.setSearched(or, m);
-                }
-                else{
-                    nextPoint            = getXandYgivenOrientation(nextPoint, or,m);
-                    Soldier emptySquare  = new Soldier(nextPoint.x, nextPoint.y, oposite);
-                    if(nextPoint.x != foo.x && nextPoint.y!= foo.y){
-                        if(isValidSquare(nextPoint.x, nextPoint.y) && isEmpty(emptySquare, gamePieces)){
+                    SearchNode tempSN = new SearchNode(foo, nextPointz, soldierPoint);
+                    if(isValidSquare(nextPointz.x, nextPointz.y)){
                             JumpPosition newList;
                             newList = (JumpPosition) jumpPositions.clone();
                             newList.setOrientationAndMovement(or, m);
-                            tempSearchNode.add(new SearchNode(foo, nextPoint, soldierPoint) , newList);
+                            tempSearchNode.add(new SearchNode(foo, nextPointz, soldierPoint) , newList);
                             jumpPosit.setSearched(or, m);
-                        }else break;
+                    }
+                }
+                else{
+                    nextPointz            = getXandYgivenOrientation(nextPointz, or,m);
+                    Soldier emptySquare  = new Soldier(nextPointz.x, nextPointz.y, oposite);
+                    if(nextPointz.x != foo.x && nextPointz.y!= foo.y){
+                        if(isValidSquare(nextPointz.x, nextPointz.y) && isEmpty(emptySquare, gamePieces)){
+                            JumpPosition newList;
+                            newList = (JumpPosition) jumpPositions.clone();
+                            newList.setOrientationAndMovement(or, m);
+                            tempSearchNode.add(new SearchNode(foo, nextPointz, soldierPoint) , newList);
+                            jumpPosit.setSearched(or, m);
+                        }
                     }
                     else break;
                 }
@@ -272,16 +299,20 @@ public class PanelRules {
              for(int i=0;i<8;i++){
                 if(i!=0) currentPoint = getXandYgivenOrientation(currentPoint, or,m);
                 if( !isValidSquare(currentPoint.x, currentPoint.y)) break;
+                soldierPoint         = getXandYgivenOrientation(currentPoint, or,m);
+                
                 for(OrientationMove orM:orientationMoveCombs){
                     soldierPoint         = getXandYgivenOrientation(currentPoint, orM.or,orM.m);
                     nextPoint            = getXandYgivenOrientation(soldierPoint, orM.or,orM.m);
                     Soldier foe          = new Soldier(soldierPoint.x, soldierPoint.y, oposite);
-                    Soldier emptySquare  = new Soldier(nextPoint.x, nextPoint.y, oposite);
-                    
                     if(isJumpable(soldierPoint, orM.or, orM.m, c , jumpPosit))
                         addAllRelevantSquares(jumpPosit,  foo, nextPoint, soldierPoint, orM.or, orM.m ,oposite );
                     
                 }
+                nextPoint = getXandYgivenOrientation(soldierPoint, or,m);
+                if(!isEmpty(soldierPoint, gamePieces, jumpPosit.jumpPosition)
+                  &&!isEmpty(nextPoint, gamePieces, jumpPosit.jumpPosition)) break;
+                
             }
                 
                  
