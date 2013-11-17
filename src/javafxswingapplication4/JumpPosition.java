@@ -88,6 +88,7 @@ public class JumpPosition implements Cloneable {
         
     }
     public void print(){
+        //Mostly used for debugging reasons
         System.out.println("-------------------");
         System.out.println("Printing a single node");
         for(SearchNode s:jumpPosition){

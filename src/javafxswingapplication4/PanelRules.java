@@ -172,7 +172,8 @@ public class PanelRules {
             Point soldierPoint = getXandYgivenOrientation(c, or, m);
             Soldier friend = new Soldier(soldierPoint.x,soldierPoint.y,color);
             Soldier foe    = new Soldier(soldierPoint.x,soldierPoint.y,oposite);
-            if(!containsSoldier(friend, gamePieces) && !containsSoldier(foe, gamePieces))
+            if(!containsSoldier(friend, gamePieces) && !containsSoldier(foe, gamePieces) 
+                    && isValidSquare(soldierPoint.x, soldierPoint.y))
                 return new Point(soldierPoint.x,soldierPoint.y);
             else if(containsSoldier(friend, gamePieces))
                 return new Point(0,0);

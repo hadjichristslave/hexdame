@@ -386,8 +386,9 @@ public class hexgame
                             if(gamePiecesr.get(i).isKing)
                                 listOfAllJumps = pr.kingJumpPositions(temp,colorTurn,true);
                             listOfAllJumps.addAll(pr.getJumps(temp,gamePiecesr.get(i).C,true));
-                            for(JumpPosition jP:listOfAllJumps)
+                            for(JumpPosition jP:listOfAllJumps)    
                                 if(jP.jumpPosition.size()>maxJumpCount) maxJumpCount =jP.jumpPosition.size();
+                            
                         } catch (CloneNotSupportedException ex) {
                             Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -398,19 +399,25 @@ public class hexgame
         public void getLegalMoves(Color colorTurn){
             ArrayList<Point> legalMoves = new ArrayList<>();
             ArrayList<JumpPosition> listOfAllJumps = new ArrayList<>();
+            
+            ArrayList<JumpPosition> availableMoves = new ArrayList<>();
                 //Get all the jumps
                 boolean jumpsExist = false;
                 for(int i=0;i<gamePiecesr.size();i++){
                     Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
-                    if(gamePiecesr.get(i).C==colorTurn){
+                    if(gamePiecesr.get(i).C.equals(colorTurn)){
                         try {
                             //Search for jumps if a pawn is a king
                             if(gamePiecesr.get(i).isKing)
                                 listOfAllJumps.addAll(pr.kingJumpPositions(temp,colorTurn,true));
                             //Check for normal jumps
-                            listOfAllJumps.addAll(pr.getJumps(temp,gamePiecesr.get(i).C,true));
-
+                            
+                           listOfAllJumps.addAll(pr.getJumps(temp,gamePiecesr.get(i).C,true));
+                           availableMoves.addAll(listOfAllJumps);
+                            
                            ArrayList<JumpPosition> tempJp = pr.getJumps(temp,gamePiecesr.get(i).C,true);
+                           availableMoves.addAll(tempJp);
+                           
                            if(tempJp.size()>0) jumpsExist=true;
                         } catch (CloneNotSupportedException ex) {
                             Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
@@ -418,22 +425,50 @@ public class hexgame
                     }
                 }
                 if(!jumpsExist){
-                    for(int i=0;i<gamePiecesr.size();i++){ 
+                    for(int i=0;i<gamePiecesr.size();i++){
                         Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
                         if(gamePiecesr.get(i).isKing && gamePiecesr.get(i).C==colorTurn)
-                            if(gamePiecesr.get(i).i == currentSelection.x && gamePiecesr.get(i).j == currentSelection.y)
-                                legalMoves.addAll(pr.getKingMovingPositions(temp.x, temp.y, colorTurn));
+                            if(gamePiecesr.get(i).i == currentSelection.x && gamePiecesr.get(i).j == currentSelection.y){
+                                ArrayList<Point> wer = pr.getKingMovingPositions(temp.x, temp.y, colorTurn);
+                                legalMoves.addAll(wer);
+                                if(wer.size()>0){
+                                    for(Point po:wer){
+                                        ArrayList<SearchNode> sN = new ArrayList<>();
+                                        sN.add(new SearchNode(temp, po, new Point(0,0)));
+                                        JumpPosition  jP = new JumpPosition(sN);
+                                        availableMoves.add(jP);                                        
+                                    }                                
+                                }
+                                
+                                
+                            }
                         //Get all moves no jumps included
-                        legalMoves.addAll(pr.getMovingPositions(temp.x, temp.y, colorTurn));
+                        if(gamePiecesr.get(i).C==colorTurn){
+                            ArrayList<Point> wer = pr.getMovingPositions(temp.x, temp.y, colorTurn);
+                            legalMoves.addAll(wer);
+                            if(wer.size()>0){
+                                for(Point po:wer){
+                                    ArrayList<SearchNode> sN = new ArrayList<>();
+                                    sN.add(new SearchNode(temp, po, new Point(0,0)));
+                                    JumpPosition  jP = new JumpPosition(sN);
+                                    availableMoves.add(jP);                                        
+                                }                                
+                            }
+                        }
+                            
                     }
-                    //Add a new point to the pos
                 }
-                for(JumpPosition jP:listOfAllJumps){
-                    jP.print(true);
-                }
-                for(Point pd :legalMoves ){
-                    System.out.println(pd.toString());
-                }
+                SearchTree sT = new SearchTree(gamePiecesr);
+                sT.cloneandtwinklewith();
+                System.out.println("Clone thingy modifications");
+                for(Soldier sl:gamePiecesr)
+                    System.out.println(sl.i + " " + sl.j + " " + sl.C.toString() );
+                
+                
+                
+                Color oposite = colorTurn.equals(Color.RED)?Color.BLACK:Color.RED;
+                //System.out.println("Turn colored" + SearchTree.heuristicValue(colorTurn, gamePiecesr));
+                //System.out.println("Oposite Colored" + SearchTree.heuristicValue(oposite, gamePiecesr));
             
         }
 }
