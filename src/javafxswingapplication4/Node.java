@@ -12,17 +12,16 @@ import java.util.ArrayList;
  * @author Panos
  */
 public class Node { 
-    JumpPosition jP; 
-    ArrayList<Node> next; 
+    JumpPosition jP;
+    ArrayList<Node> next;
 
     public Node () { 
         jP = new JumpPosition();
-        next = null; 
+        next = new ArrayList<Node>(); 
     } 
 
-    public Node (JumpPosition jP, Node next) { 
-        this.jP = jP; 
-        this.next.add(next); 
+    public Node (JumpPosition jP) { 
+        this.jP = jP;
     }
 
     public void print () { 

@@ -5,20 +5,14 @@
 package javafxswingapplication4;
 import java.awt.Color;
 import java.util.ArrayList;
-import javafxswingapplication4.PanelRules.Orientation;
-import javafxswingapplication4.PanelRules.Movement;
-import javax.swing.JPanel;
-import javax.swing.JTree;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.plaf.basic.BasicTreeUI;
-import javax.swing.tree.DefaultMutableTreeNode;
 /**
  *
  * @author Panos
  */
 public class SearchTree{
     private ArrayList<Soldier> solList;
+    Node searchNode;
+    Node root;
     
     
     public SearchTree(ArrayList<Soldier> solList){
@@ -37,23 +31,27 @@ public class SearchTree{
         ArrayList<Soldier> sL = (ArrayList<Soldier>) solList.clone();        
         sL.add(new Soldier(0, 0, Color.RED));      
     }
-    public void initializeSearchTree(JumpPosition jP){
-        Node searchNode;
-        Node next = new Node();
-        searchNode = new Node(jP , null);
-        searchNode.next.add(next);
-        searchNode.next.add(next);
-        
-        
+    public void initializeSearchTree(ArrayList<JumpPosition> jPList){
+        Node root = new Node();
+        Node next;
+        for(JumpPosition jP:jPList){
+            next = new Node(jP);
+            root.next.add(next);
+        }
+        System.out.println("root node stuff");
+        root.next.get(0).jP.print();
+        System.out.println("end of that");
     }
     
-    public void searchNodes(Node n){
+    public void printNodes(Node n){
         while(n!=null)
             for(Node sd: n.next)
-                searchNodes(n);
-        n.print();
-            
-        
+                printNodes(n);
+        System.out.println("Printing node");
+        if(n!=null)
+            if(n.jP!=null)
+                n.jP.print();
+        System.out.println("End of node");
     }
     
     

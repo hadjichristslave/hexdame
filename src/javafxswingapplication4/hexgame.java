@@ -465,7 +465,8 @@ public class hexgame
                     System.out.println(sl.i + " " + sl.j + " " + sl.C.toString() );
                 
                 
-                sT.initializeSearchTree(availableMoves.get(0));
+                sT.initializeSearchTree(availableMoves);
+                sT.printNodes(sT.root);
                 Color oposite = colorTurn.equals(Color.RED)?Color.BLACK:Color.RED;
                 //System.out.println("Turn colored" + SearchTree.heuristicValue(colorTurn, gamePiecesr));
                 //System.out.println("Oposite Colored" + SearchTree.heuristicValue(oposite, gamePiecesr));
