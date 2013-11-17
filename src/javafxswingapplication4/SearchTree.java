@@ -42,6 +42,18 @@ public class SearchTree{
         Node next = new Node();
         searchNode = new Node(jP , null);
         searchNode.next.add(next);
+        searchNode.next.add(next);
+        
+        
+    }
+    
+    public void searchNodes(Node n){
+        while(n!=null)
+            for(Node sd: n.next)
+                searchNodes(n);
+        n.print();
+            
+        
     }
     
     
