@@ -17,6 +17,8 @@ public class SearchTree{
     
     public SearchTree(ArrayList<Soldier> solList){
         this.solList = solList;
+        this.root    = new Node();
+        this.searchNode = new Node();
     }
     
     public static int heuristicValue(Color c , ArrayList<Soldier> solListy){
@@ -32,26 +34,32 @@ public class SearchTree{
         sL.add(new Soldier(0, 0, Color.RED));      
     }
     public void initializeSearchTree(ArrayList<JumpPosition> jPList){
-        Node root = new Node();
         Node next;
         for(JumpPosition jP:jPList){
-            next = new Node(jP);
+            next = new Node(jP,root);
             root.next.add(next);
         }
-        System.out.println("root node stuff");
-        root.next.get(0).jP.print();
-        System.out.println("end of that");
+    }
+    public void updateAllLeafs(Node n){
+        if(n.next!=null)
+            for(Node sd: n.next)
+                printNodes(sd);
+        else{
+            JumpPosition jP = new JumpPosition();
+            Node newNode = new Node(jP, n);
+            n.next.add(newNode);
+        }
     }
     
     public void printNodes(Node n){
-        while(n!=null)
-            for(Node sd: n.next)
-                printNodes(n);
-        System.out.println("Printing node");
-        if(n!=null)
-            if(n.jP!=null)
-                n.jP.print();
-        System.out.println("End of node");
+            if(n.next!=null)
+                for(Node sd: n.next)
+                    printNodes(sd);
+            else{
+                System.out.println("single node printing ");
+                n.jP.print(true);
+                n.printparent();
+            }        
     }
     
     

@@ -458,16 +458,13 @@ public class hexgame
                             
                     }
                 }
-                SearchTree sT = new SearchTree(gamePiecesr);
-                sT.cloneandtwinklewith();
-                System.out.println("Clone thingy modifications");
-                for(Soldier sl:gamePiecesr)
-                    System.out.println(sl.i + " " + sl.j + " " + sl.C.toString() );
-                
+                SearchTree sT = new SearchTree(gamePiecesr);                
                 
                 sT.initializeSearchTree(availableMoves);
                 sT.printNodes(sT.root);
-                Color oposite = colorTurn.equals(Color.RED)?Color.BLACK:Color.RED;
+                sT.updateAllLeafs(sT.root);
+                int iasdf=14;
+                //Color oposite = colorTurn.equals(Color.RED)?Color.BLACK:Color.RED;
                 //System.out.println("Turn colored" + SearchTree.heuristicValue(colorTurn, gamePiecesr));
                 //System.out.println("Oposite Colored" + SearchTree.heuristicValue(oposite, gamePiecesr));
             

@@ -14,17 +14,23 @@ import java.util.ArrayList;
 public class Node { 
     JumpPosition jP;
     ArrayList<Node> next;
+    Node previous;
 
     public Node () { 
         jP = new JumpPosition();
         next = new ArrayList<Node>(); 
     } 
 
-    public Node (JumpPosition jP) { 
+    public Node (JumpPosition jP , Node previous) { 
         this.jP = jP;
+        this.previous = previous;
     }
 
     public void print () { 
         jP.print(true); 
+    }
+    public void printparent(){
+        System.out.println("comes from ");
+        previous.jP.print(true);
     }
 } 
