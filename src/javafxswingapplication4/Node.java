@@ -15,6 +15,7 @@ public class Node {
     JumpPosition jP;
     ArrayList<Node> next;
     Node previous;
+    int value=Integer.MIN_VALUE;
 
     public Node () { 
         jP = new JumpPosition();

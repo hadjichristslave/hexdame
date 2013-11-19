@@ -87,7 +87,7 @@ public class hexgame
  
 	private void createAndShowGUI(){
             
-		DrawingPanel panel = new DrawingPanel();
+ 		DrawingPanel panel = new DrawingPanel();
 		//JFrame.setDefaultLookAndFeelDecorated(true);
 		JFrame frame = new JFrame("HexDame v0.3");
 		frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
@@ -199,7 +199,7 @@ public class hexgame
                         // Draw Jumps
                         for(Iterator<Point> m=moves.iterator(); m.hasNext(); ){
                             Point temp = m.next();
-                            System.out.println("Will fill" + temp.toString());
+                            //System.out.println("Will fill" + temp.toString());
                             hexmech.fillHex(temp.x,temp.y,-15,g2 ,"");
                         }
                         for(Soldier sold:captureSoldierPositionAndColor )
@@ -228,8 +228,11 @@ public class hexgame
                             Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );                            
                             Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
                             Color invcolorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
-                            
-                            getLegalMoves(colorTurn);
+                            try {
+                                getLegalMoves(colorTurn);
+                            } catch (CloneNotSupportedException ex) {
+                                Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                             
                             ArrayList<JumpPosition> listOfAllJumps;
                             if(pr.containsSoldier(new Soldier(p.x, p.y, colorTurn) , gamePiecesr) && PanelRules.isValidSquare(p.x, p.y)){
@@ -267,7 +270,7 @@ public class hexgame
                                                     for(SearchNode sN:jp.jumpPosition){
                                                         SearchNode from = jp.jumpPosition.get(0);
                                                         if(from.from.x == currentSelection.x && from.from.y == currentSelection.y){
-                                                            System.out.println("from " + from.from.toString() + " reaches "+reaches.toString() );
+                                                            //System.out.println("from " + from.from.toString() + " reaches "+reaches.toString() );
                                                             captureSoldierPositionAndColor.add(new Soldier(sN.jumps.x , sN.jumps.y, size, c , reaches , from.from));
                                                             moves.add(reaches);
                                                         }
@@ -396,7 +399,7 @@ public class hexgame
             }
             return maxJumpCount;
         }
-        public void getLegalMoves(Color colorTurn){
+        public void getLegalMoves(Color colorTurn) throws CloneNotSupportedException{
             ArrayList<Point> legalMoves = new ArrayList<>();
             ArrayList<JumpPosition> listOfAllJumps = new ArrayList<>();
             
@@ -411,19 +414,15 @@ public class hexgame
                             if(gamePiecesr.get(i).isKing)
                                 listOfAllJumps.addAll(pr.kingJumpPositions(temp,colorTurn,true));
                             //Check for normal jumps
-                            
-                           listOfAllJumps.addAll(pr.getJumps(temp,gamePiecesr.get(i).C,true));
-                           availableMoves.addAll(listOfAllJumps);
-                            
+                                                        
                            ArrayList<JumpPosition> tempJp = pr.getJumps(temp,gamePiecesr.get(i).C,true);
                            availableMoves.addAll(tempJp);
-                           
                            if(tempJp.size()>0) jumpsExist=true;
                         } catch (CloneNotSupportedException ex) {
                             Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-                }
+                }          
                 if(!jumpsExist){
                     for(int i=0;i<gamePiecesr.size();i++){
                         Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
@@ -451,22 +450,18 @@ public class hexgame
                                     ArrayList<SearchNode> sN = new ArrayList<>();
                                     sN.add(new SearchNode(temp, po, new Point(0,0)));
                                     JumpPosition  jP = new JumpPosition(sN);
-                                    availableMoves.add(jP);                                        
-                                }                                
+                                    availableMoves.add(jP);
+                                }
                             }
                         }
-                            
                     }
                 }
-                SearchTree sT = new SearchTree(gamePiecesr);                
+                Color oposite = colorTurn.equals(Color.RED)?Color.BLACK:Color.RED;
+                SearchTree sT = new SearchTree(gamePiecesr);
                 
-                sT.initializeSearchTree(availableMoves);
-                sT.printNodes(sT.root);
-                sT.updateAllLeafs(sT.root);
-                int iasdf=14;
-                //Color oposite = colorTurn.equals(Color.RED)?Color.BLACK:Color.RED;
+                sT.initializeAndSearchTree(availableMoves , colorTurn);               
+                //sT.printNodes(sT.root);
                 //System.out.println("Turn colored" + SearchTree.heuristicValue(colorTurn, gamePiecesr));
-                //System.out.println("Oposite Colored" + SearchTree.heuristicValue(oposite, gamePiecesr));
-            
+                //System.out.println("Oposite Colored" + SearchTree.heuristicValue(oposite, gamePiecesr));   
         }
 }

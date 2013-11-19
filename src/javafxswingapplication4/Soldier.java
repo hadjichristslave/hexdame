@@ -10,7 +10,7 @@ import java.awt.Point;
  *
  * @author Panos
  */
-public class Soldier {
+public class Soldier implements Cloneable {
      public int i,j;
      public Color C;
      public boolean isKing = false;
@@ -32,4 +32,8 @@ public class Soldier {
         this.jumpsTo = JumpsTo;
         this.jumpsFrom = jumpsFrom;
     }
+        protected Object clone() throws CloneNotSupportedException {
+            return super.clone();
+        }
+    
 }

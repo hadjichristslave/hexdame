@@ -7,7 +7,8 @@ package javafxswingapplication4;
 import java.awt.Color;
 import java.awt.Point;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -544,5 +545,69 @@ public class PanelRules {
                 }
             }
             return new Point(0,0);
+        }
+    public ArrayList<JumpPosition> getLegalMoves(Color colorTurn , ArrayList<Soldier> gamePiecesr){
+            ArrayList<Point> legalMoves = new ArrayList<>();
+            ArrayList<JumpPosition> listOfAllJumps = new ArrayList<>();
+            
+            ArrayList<JumpPosition> availableMoves = new ArrayList<>();
+                //Get all the jumps
+                boolean jumpsExist = false;
+                for(int i=0;i<gamePiecesr.size();i++){
+                    Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
+                    if(gamePiecesr.get(i).C.equals(colorTurn)){
+                        try {
+                            //Search for jumps if a pawn is a king
+                            if(gamePiecesr.get(i).isKing)
+                                listOfAllJumps.addAll(kingJumpPositions(temp,colorTurn,true));
+                            //Check for normal jumps
+                                                        
+                           ArrayList<JumpPosition> tempJp = getJumps(temp,gamePiecesr.get(i).C,true);
+                           availableMoves.addAll(tempJp);
+                           
+                           if(tempJp.size()>0) jumpsExist=true;
+                        } catch (CloneNotSupportedException ex) {
+                            Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+                if(!jumpsExist){
+                    for(int i=0;i<gamePiecesr.size();i++){
+                        Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
+                        if(gamePiecesr.get(i).isKing && gamePiecesr.get(i).C==colorTurn){
+                                ArrayList<Point> wer = getKingMovingPositions(temp.x, temp.y, colorTurn);
+                                legalMoves.addAll(wer);
+                                if(wer.size()>0){
+                                    for(Point po:wer){
+                                        ArrayList<SearchNode> sN = new ArrayList<>();
+                                        sN.add(new SearchNode(temp, po, new Point(0,0)));
+                                        JumpPosition  jP = new JumpPosition(sN);
+                                        availableMoves.add(jP);                                        
+                                    }                                
+                                }
+                                
+                                
+                            }
+                        //Get all moves no jumps included
+                        if(gamePiecesr.get(i).C==colorTurn){
+                            ArrayList<Point> wer = getMovingPositions(temp.x, temp.y, colorTurn);
+                            legalMoves.addAll(wer);
+                            if(wer.size()>0){
+                                for(Point po:wer){
+                                    ArrayList<SearchNode> sN = new ArrayList<>();
+                                    sN.add(new SearchNode(temp, po, new Point(0,0)));
+                                    JumpPosition  jP = new JumpPosition(sN);
+                                    availableMoves.add(jP);                                        
+                                }                                
+                            }
+                        }
+                            
+                    }
+                }
+                
+                return availableMoves;
+                //Color oposite = colorTurn.equals(Color.RED)?Color.BLACK:Color.RED;
+                //System.out.println("Turn colored" + SearchTree.heuristicValue(colorTurn, gamePiecesr));
+                //System.out.println("Oposite Colored" + SearchTree.heuristicValue(oposite, gamePiecesr));   
         }
 }

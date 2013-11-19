@@ -105,12 +105,8 @@ public class JumpPosition implements Cloneable {
         
     }
      public void print(boolean bool){
-        System.out.println("-------------------");
-        for(SearchNode s:jumpPosition){
+        for(SearchNode s:jumpPosition)
             System.out.println(s.from.toString() + " " + s.to.toString() + " " + s.jumps.toString());
-        }
-        System.out.println("-------------------");
-        
     }
     public boolean exists(ArrayList<SearchNode> we){
         if(jumpPosition.size()==we.size()){
