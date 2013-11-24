@@ -22,6 +22,7 @@ public class SearchTree{
     public SearchTree(ArrayList<Soldier> solList){
         this.solList = (ArrayList<Soldier>) solList.clone();
         this.root    = new Node();
+        this.root.previous = null;
     }
     public static int heuristicValue(Color c , ArrayList<Soldier> solListy){
         int heuristicVal = 0;
@@ -44,23 +45,35 @@ public class SearchTree{
         ArrayList<Soldier> sL = (ArrayList<Soldier>) solList.clone();
         sL.add(new Soldier(0, 0, Color.RED));
     }
-    public ArrayList<Node> initializeAndSearchTree(ArrayList<JumpPosition> jPList , Color c) throws CloneNotSupportedException{
+    public ArrayList<JumpPosition> initializeAndSearchTree(ArrayList<JumpPosition> jPList , Color c) throws CloneNotSupportedException{
         bestMoveVal = Integer.MIN_VALUE;
         Node next;
         for(JumpPosition jP:jPList){
             next = new Node(jP,root);
-            root.next.add(next);
+            ArrayList<Soldier> fooSold = setupSoldiersGivenJumpPosition(solList, jP.jumpPosition);
+            next.value = heuristicValue(Color.black, fooSold);
+            boolean isLastElement = true;
+            for(int jk=0;jk<root.next.size();jk++){
+                if(next.value>root.next.get(jk).value){
+                    root.next.add(jk, next);
+                    isLastElement = false;
+                    break;
+                }
+            }
+            if(isLastElement)
+                root.next.add(next);
         }
+        NegaAlphaBeta(root,2, Integer.MIN_VALUE, Integer.MAX_VALUE);
         Color currentSearchColor = c;
         long currentTime         = System.currentTimeMillis();
         //while(currentTime+5000 >System.currentTimeMillis()){
-        for(int jk=0;jk<1;jk++){
+        for(int jk=0;jk<2;jk++){
             searchNodesNextStep(root, currentSearchColor);
-            currentSearchColor = toggleColor(currentSearchColor);
+            NegaAlphaBeta(root,jk+2, Integer.MIN_VALUE, Integer.MAX_VALUE);
+             currentSearchColor = toggleColor(currentSearchColor);
         }
-        bestMoves.clear();
-        getBestMoves(root);
-        return bestMoves;
+        
+        return new ArrayList<JumpPosition>();
     }
     public Color toggleColor(Color c){
         return c.equals(Color.black)?Color.red:Color.black;
@@ -85,17 +98,13 @@ public class SearchTree{
                 System.out.println(n.value);
             }        
     }
-    public void searchNodesNextStep(Node n, Color c) throws CloneNotSupportedException{
-            if(n.next!=null)
-                for(Node sd: n.next)
-                    searchNodesNextStep(sd , c); 
-            else{
-                ArrayList<Soldier> fooSold  = new ArrayList<>();
-                for(Soldier p : solList) {
-                    fooSold.add((Soldier) p.clone());
-                }                
-                ArrayList<SearchNode> jPList = (ArrayList<SearchNode>) n.jP.jumpPosition.clone();
-                for(int j = 0;j<jPList.size();j++){
+    public ArrayList<Soldier> setupSoldiersGivenJumpPosition(ArrayList<Soldier> soList , ArrayList<SearchNode> jP) throws CloneNotSupportedException{
+        ArrayList<Soldier> fooSold  = new ArrayList<>();
+        for(Soldier p : solList) 
+            fooSold.add((Soldier) p.clone());
+        ArrayList<SearchNode> jPList = (ArrayList<SearchNode>) jP.clone();
+        
+        for(int j = 0;j<jPList.size();j++){
                     SearchNode sN = jPList.get(j);
                     for(Iterator<Soldier> soldier = fooSold.iterator(); soldier.hasNext();){
                         Soldier fooSol = soldier.next();
@@ -103,12 +112,15 @@ public class SearchTree{
                                 fooSol.i =  sN.to.x;
                                 fooSol.j =  sN.to.y;
                                 if(PanelRules.isKingSquare(fooSol.i, fooSol.j, fooSol.C)){
+                                    System.out.println("kingsquare detected ");
                                     if(j+1==jPList.size()){
+                                        System.out.println("Turned to king");
                                         fooSol.print();
                                         fooSol.isKing = true;
                                     }
                                     else if(j+1<jPList.size()){
                                         if((jPList.get(j+1).from.x!=sN.to.x)&&(jPList.get(j+1).from.y!=sN.to.y)){
+                                            System.out.println("Turned to king");
                                             fooSol.print();
                                             fooSol.isKing = true;
                                         }
@@ -120,19 +132,41 @@ public class SearchTree{
                     }
 
                 }
+    
+        return fooSold;
+    }
+    public void searchNodesNextStep(Node n, Color c) throws CloneNotSupportedException{
+            if(n.next!=null)
+                for(Node sd: n.next)
+                    searchNodesNextStep(sd , c); 
+            else{
+                ArrayList<Soldier> fooSold  = new ArrayList<>();
+                
+                for(Soldier p : solList) 
+                    fooSold.add((Soldier) p.clone());
+                fooSold = setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition);
+                
                 Color oposite = c.equals(Color.RED)?Color.BLACK:Color.RED;
                 PanelRules pr = new PanelRules(fooSold);
                 ArrayList<JumpPosition> NextNodes = pr.getLegalMoves(oposite, fooSold);
                 n.next = new ArrayList<>();
+                
                 for(JumpPosition nextNode: NextNodes){
                     JumpPosition jp = new JumpPosition();                    
                     nextNode.jumpPosition.addAll(0 , n.jP.jumpPosition);                    
                     
                     Node newNode =  new Node(nextNode, n);
-                    newNode.value = heuristicValue(oposite, fooSold);
-                    n.next.add(newNode);
-                    if(newNode.value>bestMoveVal)
-                        bestMoveVal = newNode.value;
+                    newNode.value = heuristicValue(Color.BLACK, fooSold);
+                    if(n.next.size()>0){
+                        for(Node tempNode:n.next){
+                            if(newNode.value >= tempNode.value){
+                                n.next.add(newNode);
+                                break;
+                            }
+                        }
+                    }else 
+                        n.next.add(newNode);
+
                 }
             }
     }
@@ -158,4 +192,45 @@ public class SearchTree{
         }
     }
   
+    public int NegaAlphaBeta(Node n, int depth, int alpha, int beta) throws CloneNotSupportedException{
+        int score = Integer.MIN_VALUE;
+        if(n.next!=null && depth>0){
+            score = Integer.MIN_VALUE;
+            for(int il=0;il<n.next.size();il++){
+                Node sd = n.next.get(il);
+                n.value = -NegaAlphaBeta(sd , depth-1, -beta, -alpha);   
+                if(n.value>score) {
+                    System.out.println("score modified to " + n.value);
+                    score = n.value;
+                }
+                if(score>alpha){
+                    System.out.println("alpha modified to " + score);
+                    alpha = score;
+                }
+                if(score>=beta) {
+                    System.out.println("pruned because score and beta are  "+ score + " " + beta);
+                    int prunecount = 0;
+                    while (n.next.size()>il+1){
+                        n.next.remove(il+1);   
+                        prunecount++;
+                    }
+                    System.out.println("pruned " + prunecount);
+                    break;
+                }
+            }
+        }
+        else{
+            n.value = heuristicValue(Color.black, setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition));
+            System.out.println("Returning value " + n.value);
+            return n.value;
+        }
+    
+        return score;
+    }
+    /*
+     * TODOS, CREATE PRINCIPLE VARIATION GETTER
+     *
+     */
+    public void getPrincipleVariation(){}
+    
 }
