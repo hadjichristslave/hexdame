@@ -9,7 +9,6 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 /**
  *
  * @author Panos
@@ -34,8 +33,12 @@ public class PanelRules {
      
      private ArrayList<OrientationMove>      orientationMoveCombs = new ArrayList<OrientationMove>();
      
-    
-     
+    /*
+     * valid king squares for both sides
+     *
+     */
+    final static int[ ][ ] redKingSquares = {{0,2},{1,1}, {2,1}, {3,0} ,{4,0}, {5,0} , {6,1}, {7,1} ,{8,2}};
+    final static int[ ][ ] blackKingSquares = {{0,6}, {1,6}, {2,7}, {3,7} ,{4,8}, {5,7} , {6,7}, {7,6} , {8,6}};
 
      enum Orientation {UP, DOWN};
      enum Movement {LEFT, RIGHT , FORWARD};     
@@ -90,8 +93,8 @@ public class PanelRules {
         public boolean containsSoldier(Soldier test, ArrayList<Soldier> gamePiece , boolean foo){
             for (int i=0;i<gamePiece.size();i++){
                 if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j && test.C.equals(gamePiece.get(i).C)){
-                    System.out.println(test.C.toString());
-                    System.out.println(gamePiece.get(i).C.toString());
+                    //System.out.println(test.C.toString());
+                    //System.out.println(gamePiece.get(i).C.toString());
                     return true;
                 }
             }
@@ -216,7 +219,8 @@ public class PanelRules {
             Color oposite  = color==Color.black?Color.red:Color.black;
             Point currentPos = getXandYgivenOrientation(c, or, m);
             for(int i=0;i<8;i++){
-                Soldier previousPos   =  new Soldier(currentPos.x ,currentPos.y, oposite);;
+                Soldier previousPos   =  new Soldier(currentPos.x ,currentPos.y, oposite);
+                //Soldier previousPos   =  new Soldier(c.x ,c.y, oposite);
                 if(i!=0) currentPos = getXandYgivenOrientation(currentPos, or, m);
                 if(isValidSquare(currentPos.x, currentPos.y)){
                     Point nextPos  = getXandYgivenOrientation(currentPos, or, m);
@@ -234,7 +238,6 @@ public class PanelRules {
                     if(containsSoldier(foe, gamePieces , true) 
                     && isValidSquare(nextPos.x, nextPos.y) 
                     && isEmpty(nextPoint, gamePieces)){
-                        System.out.println("will go from " + c.toString()  + " to " +nextPos.toString()+ " jumping "+ currentPos.toString() );
                         ArrayList<SearchNode> foo = new ArrayList<SearchNode>();
                         foo.add(new SearchNode(c,nextPos,currentPos));
                         JumpPosition jp = new JumpPosition(foo);
@@ -244,7 +247,8 @@ public class PanelRules {
                         
                         for(int iq=0;iq<6;iq++){
                             nextPos = getXandYgivenOrientation(nextPos, or, m);
-                            if(isEmpty(new Soldier(nextPos.x, nextPos.y, Color.WHITE), gamePieces)){
+                            if(isEmpty(new Soldier(nextPos.x, nextPos.y, Color.WHITE), gamePieces)
+                             && isValidSquare(nextPos.x, nextPos.y)){
                                 foo = new ArrayList<SearchNode>();
                                 foo.add(new SearchNode(c,nextPos,currentPos));
                                 jp = new JumpPosition(foo);
@@ -255,7 +259,7 @@ public class PanelRules {
                         }
                         //break;
                     }
-                }                
+                }             
                 else break;
             }
             return validMultiJumpSquares;
@@ -284,7 +288,7 @@ public class PanelRules {
                             newList.setOrientationAndMovement(or, m);
                             tempSearchNode.add(new SearchNode(foo, nextPointz, soldierPoint) , newList);
                             jumpPosit.setSearched(or, m);
-                        }
+                        }else break;
                     }
                     else break;
                 }
@@ -293,7 +297,7 @@ public class PanelRules {
         }
          private void getKingJumpPos(Point kingPoint, Orientation or, Movement m, JumpPosition jumpPosit,Color c, boolean b) throws CloneNotSupportedException {
             //Take the last position of the movement as current point
-             Point foo = jumpPositions.jumpPosition.get(jumpPositions.jumpPosition.size()-1).to;
+             Point foo = jumpPosit.jumpPosition.get(jumpPosit.jumpPosition.size()-1).to;
              Color oposite  = c==Color.black?Color.red:Color.black;
              Point currentPoint = foo;
              Point soldierPoint , nextPoint;
@@ -301,15 +305,15 @@ public class PanelRules {
              for(int i=0;i<8;i++){
                 if(i!=0) currentPoint = getXandYgivenOrientation(currentPoint, or,m);
                 if( !isValidSquare(currentPoint.x, currentPoint.y)) break;
+                if( !isEmpty(new Soldier(currentPoint.x, currentPoint.y, Color.white), gamePieces)) break;
                 soldierPoint         = getXandYgivenOrientation(currentPoint, or,m);
-                
                 for(OrientationMove orM:orientationMoveCombs){
                     soldierPoint         = getXandYgivenOrientation(currentPoint, orM.or,orM.m);
                     nextPoint            = getXandYgivenOrientation(soldierPoint, orM.or,orM.m);
                     Soldier foe          = new Soldier(soldierPoint.x, soldierPoint.y, oposite);
                     if(isJumpable(soldierPoint, orM.or, orM.m, c , jumpPosit))
                         addAllRelevantSquares(jumpPosit,  foo, nextPoint, soldierPoint, orM.or, orM.m ,oposite );
-                    
+
                 }
                 nextPoint = getXandYgivenOrientation(soldierPoint, or,m);
                 if(!isEmpty(soldierPoint, gamePieces, jumpPosit.jumpPosition)
@@ -557,12 +561,20 @@ public class PanelRules {
                     Point temp = new Point(gamePiecesr.get(i).i, gamePiecesr.get(i).j);
                     if(gamePiecesr.get(i).C.equals(colorTurn)){
                         try {
+                            ArrayList<JumpPosition> tempJp = new ArrayList<>();
                             //Search for jumps if a pawn is a king
-                            if(gamePiecesr.get(i).isKing)
+                            
+                            if(gamePiecesr.get(i).isKing){
+                                tempJp = kingJumpPositions(temp,colorTurn,true);
                                 listOfAllJumps.addAll(kingJumpPositions(temp,colorTurn,true));
+                            }
+                            if(tempJp.size()>0){
+                                jumpsExist=true;
+                                availableMoves.addAll(tempJp);
+                            }
                             //Check for normal jumps
-                                                        
-                           ArrayList<JumpPosition> tempJp = getJumps(temp,gamePiecesr.get(i).C,true);
+                           tempJp = new ArrayList<>();                     
+                           tempJp = getJumps(temp,gamePiecesr.get(i).C,true);
                            availableMoves.addAll(tempJp);
                            
                            if(tempJp.size()>0) jumpsExist=true;
@@ -604,10 +616,18 @@ public class PanelRules {
                             
                     }
                 }
-                
                 return availableMoves;
-                //Color oposite = colorTurn.equals(Color.RED)?Color.BLACK:Color.RED;
-                //System.out.println("Turn colored" + SearchTree.heuristicValue(colorTurn, gamePiecesr));
-                //System.out.println("Oposite Colored" + SearchTree.heuristicValue(oposite, gamePiecesr));   
+        }
+    public static boolean isKingSquare(int x, int y , Color c){
+            if(c.equals(Color.black)){
+                for(int i=0;i<9;i++){
+                    if(x==blackKingSquares[i][0] && y==blackKingSquares[i][1])    return true;   
+                }
+            }else if(c.equals(Color.red)){
+                 for(int j=0;j<9;j++){
+                    if(x==redKingSquares[j][0] && y==redKingSquares[j][1])    return true;
+                 }
+            }
+            return false;
         }
 }

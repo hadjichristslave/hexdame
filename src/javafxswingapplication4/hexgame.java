@@ -11,6 +11,8 @@ package javafxswingapplication4;
 import java.awt.*;
 import javax.swing.*;
 import java.awt.event.*; 
+import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
@@ -35,6 +37,7 @@ public class hexgame
     public turn CurrentTurn;
     ArrayList moves = new ArrayList<Point>();
     Point currentSelection = new Point();
+    int moveCounter    = 0;
     
         private hexgame() {                
 		initGame();
@@ -232,6 +235,10 @@ public class hexgame
                                 getLegalMoves(colorTurn);
                             } catch (CloneNotSupportedException ex) {
                                 Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (FileNotFoundException ex) {
+                                Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (UnsupportedEncodingException ex) {
+                                Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
                             }
                             
                             ArrayList<JumpPosition> listOfAllJumps;
@@ -399,7 +406,7 @@ public class hexgame
             }
             return maxJumpCount;
         }
-        public void getLegalMoves(Color colorTurn) throws CloneNotSupportedException{
+        public void getLegalMoves(Color colorTurn) throws CloneNotSupportedException, FileNotFoundException, UnsupportedEncodingException{
             ArrayList<Point> legalMoves = new ArrayList<>();
             ArrayList<JumpPosition> listOfAllJumps = new ArrayList<>();
             
@@ -411,12 +418,31 @@ public class hexgame
                     if(gamePiecesr.get(i).C.equals(colorTurn)){
                         try {
                             //Search for jumps if a pawn is a king
+                            ArrayList<JumpPosition> tempJp = new ArrayList<>();
                             if(gamePiecesr.get(i).isKing)
-                                listOfAllJumps.addAll(pr.kingJumpPositions(temp,colorTurn,true));
+                                 tempJp = pr.kingJumpPositions(temp,colorTurn,true);
+                                listOfAllJumps.addAll(tempJp);
+                            if(tempJp.size()>0){
+                                jumpsExist = true;
+                                availableMoves.addAll(tempJp);
+                            }
+                            
                             //Check for normal jumps
-                                                        
-                           ArrayList<JumpPosition> tempJp = pr.getJumps(temp,gamePiecesr.get(i).C,true);
+                           tempJp = new ArrayList<>();                    
+                           tempJp = pr.getJumps(temp,gamePiecesr.get(i).C,true);
                            availableMoves.addAll(tempJp);
+                           int maxMoves = 0;
+                           
+                           for(Iterator<JumpPosition> jP = availableMoves.iterator(); jP.hasNext();){
+                               if(jP.next().jumpPosition.size()>maxMoves)
+                                   maxMoves = jP.next().jumpPosition.size();
+                           }
+                           for(Iterator<JumpPosition> jP = availableMoves.iterator(); jP.hasNext();){
+                               JumpPosition jPP= jP.next();
+                               if(jPP.jumpPosition.size()<maxMoves)
+                                   jP.remove();
+                               
+                           }
                            if(tempJp.size()>0) jumpsExist=true;
                         } catch (CloneNotSupportedException ex) {
                             Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
@@ -459,7 +485,15 @@ public class hexgame
                 Color oposite = colorTurn.equals(Color.RED)?Color.BLACK:Color.RED;
                 SearchTree sT = new SearchTree(gamePiecesr);
                 
-                sT.initializeAndSearchTree(availableMoves , colorTurn);               
+                ArrayList<Node> bestMoveNode;
+                bestMoveNode = sT.initializeAndSearchTree(availableMoves , colorTurn);
+//                if(moveCounter>19)
+//                    sT.printNodes(sT.root);
+                moveCounter++;
+                
+                //for(Node n:bestMoveNode)
+                    //n.jP.print(true);
+                
                 //sT.printNodes(sT.root);
                 //System.out.println("Turn colored" + SearchTree.heuristicValue(colorTurn, gamePiecesr));
                 //System.out.println("Oposite Colored" + SearchTree.heuristicValue(oposite, gamePiecesr));   

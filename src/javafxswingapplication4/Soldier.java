@@ -35,5 +35,8 @@ public class Soldier implements Cloneable {
         protected Object clone() throws CloneNotSupportedException {
             return super.clone();
         }
+        public void print(){
+            System.out.println(this.i  + " " + this.j + " " + this.C.toString());
+        }
     
 }
