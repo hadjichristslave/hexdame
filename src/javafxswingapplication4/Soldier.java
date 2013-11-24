@@ -36,7 +36,7 @@ public class Soldier implements Cloneable {
             return super.clone();
         }
         public void print(){
-            System.out.println(this.i  + " " + this.j + " " + this.C.toString());
+            //System.out.println(this.i  + " " + this.j + " " + this.C.toString());
         }
     
 }
