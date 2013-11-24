@@ -434,8 +434,9 @@ public class hexgame
                            int maxMoves = 0;
                            
                            for(Iterator<JumpPosition> jP = availableMoves.iterator(); jP.hasNext();){
-                               if(jP.next().jumpPosition.size()>maxMoves)
-                                   maxMoves = jP.next().jumpPosition.size();
+                               JumpPosition jPP= jP.next();
+                               if(jPP.jumpPosition.size()>maxMoves)
+                                   maxMoves = jPP.jumpPosition.size();
                            }
                            for(Iterator<JumpPosition> jP = availableMoves.iterator(); jP.hasNext();){
                                JumpPosition jPP= jP.next();

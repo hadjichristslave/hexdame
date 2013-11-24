@@ -54,7 +54,7 @@ public class SearchTree{
         Color currentSearchColor = c;
         long currentTime         = System.currentTimeMillis();
         //while(currentTime+5000 >System.currentTimeMillis()){
-        for(int jk=0;jk<2;jk++){
+        for(int jk=0;jk<1;jk++){
             searchNodesNextStep(root, currentSearchColor);
             currentSearchColor = toggleColor(currentSearchColor);
         }

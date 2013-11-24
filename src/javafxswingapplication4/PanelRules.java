@@ -281,7 +281,7 @@ public class PanelRules {
                 else{
                     nextPointz            = getXandYgivenOrientation(nextPointz, or,m);
                     Soldier emptySquare  = new Soldier(nextPointz.x, nextPointz.y, oposite);
-                    if(nextPointz.x != foo.x && nextPointz.y!= foo.y){
+                    if(nextPointz.x != foo.x || nextPointz.y!= foo.y){
                         if(isValidSquare(nextPointz.x, nextPointz.y) && isEmpty(emptySquare, gamePieces)){
                             JumpPosition newList;
                             newList = (JumpPosition) jumpPositions.clone();
