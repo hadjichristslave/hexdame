@@ -17,6 +17,7 @@ public class SearchTree{
                                            {0,6}, {1,6}, {2,7}, {3,7} ,{4,8}, {5,7} , {6,7}, {7,6} , {8,6},
                                             {0,3},{0,4},{0,5},{8,3},{8,4},{8,5} };
     public int bestMoveGrading;
+    public ArrayList<JumpPosition> bestMovesCalculated;
     public SearchTree(ArrayList<Soldier> solList){
         this.solList = (ArrayList<Soldier>) solList.clone();
         this.root    = new Node();
@@ -71,14 +72,15 @@ public class SearchTree{
         //long currentTime         = System.currentTimeMillis();
         //while(currentTime+5000 >System.currentTimeMillis()){
         
-        for(int jk=0;jk<8;jk++){
+        for(int jk=0;jk<7;jk++){
             bestMoveGrading = Integer.MIN_VALUE;
             searchNodesNextStep(root, currentSearchColor);
             NegaAlphaBeta(root,jk+2, Integer.MIN_VALUE, Integer.MAX_VALUE);
             currentSearchColor = toggleColor(currentSearchColor);
         }
-        printNodes(root);
-        return new ArrayList<JumpPosition>();
+        bestMovesCalculated = new ArrayList<>();
+        populateMoves(root);
+        return bestMovesCalculated;
     }
     public Color toggleColor(Color c){
         return c.equals(Color.black)?Color.red:Color.black;
@@ -93,6 +95,12 @@ public class SearchTree{
             n.next.add(newNode);
         }
     }
+    public void populateMoves(Node n){
+            if(n.next!=null)
+                for(Node sd: n.next) populateMoves(sd);
+            else
+                if(n.value ==bestMoveGrading) bestMovesCalculated.add(n.jP);                 
+    }
     public void printNodes(Node n){
             if(n.next!=null)
                 for(Node sd: n.next)
@@ -102,17 +110,11 @@ public class SearchTree{
                     System.out.println("best node printing ");
                     System.out.println(n.value);
                     n.jP.print(true);
-                }
-                
-                Node PrevNode = n.previous;
-                //while(PrevNode.previous!=null){
-                    //System.out.println("->");
-                    //PrevNode.jP.print(false);
-                    //PrevNode = PrevNode.previous;
-                //}
-                    
+                    bestMovesCalculated.add(n.jP);
+                }                    
             }        
     }
+    
     public ArrayList<Soldier> setupSoldiersGivenJumpPosition(ArrayList<Soldier> soList , ArrayList<SearchNode> jP) throws CloneNotSupportedException{
         ArrayList<Soldier> fooSold  = new ArrayList<>();
         for(Soldier p : solList) 
