@@ -7,10 +7,16 @@ import java.awt.Color;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 /**
  * @author Panos
  */
 public class SearchTree{
+
+    private static ArrayList<JumpPosition> kingJumpPositions(Soldier sol, Color c, boolean b) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     private ArrayList<Soldier> solList;
     Node root;
     final static int[ ][ ] sideSquares = {{0,2},{1,1}, {2,1}, {3,0} ,{4,0}, {5,0} , {6,1}, {7,1} ,{8,2},
@@ -30,6 +36,31 @@ public class SearchTree{
                 heuristicVal = sl.isKing?(heuristicVal+10):(heuristicVal+1);
             if(sl.C.equals(c) && isSideSquare(sl.i, sl.j))
                 heuristicVal = heuristicVal+4;
+            PanelRules pr = new PanelRules(solListy);
+            for(Soldier sol:solListy){
+                ArrayList<JumpPosition> tempJp;
+                if(sol.isKing && sl.C.equals(c)){
+                    try {
+                      tempJp = pr.kingJumpPositions(new Point(sol.i, sol.j), c, true);
+                      if(tempJp.size()>0){
+                          heuristicVal = heuristicVal+5;
+                      }
+                  } catch (CloneNotSupportedException ex) {
+                      Logger.getLogger(SearchTree.class.getName()).log(Level.SEVERE, null, ex);
+                  }
+                }else if(sl.C.equals(c)){
+                    try {
+                      tempJp = pr.getJumps(new Point(sol.i, sol.j),sol.C,true);
+                      if(tempJp.size()>0){
+                          heuristicVal = heuristicVal+3;
+                      }
+                  } catch (CloneNotSupportedException ex) {
+                      Logger.getLogger(SearchTree.class.getName()).log(Level.SEVERE, null, ex);
+                  }
+                }
+            } 
+            
+            
             
         }
         
