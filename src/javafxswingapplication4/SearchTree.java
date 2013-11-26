@@ -30,7 +30,9 @@ public class SearchTree{
                 heuristicVal = sl.isKing?(heuristicVal+10):(heuristicVal+1);
             if(sl.C.equals(c) && isSideSquare(sl.i, sl.j))
                 heuristicVal = heuristicVal+4;
+            
         }
+        
         return heuristicVal;
     }
       public static boolean isSideSquare(int x, int y){
@@ -72,7 +74,7 @@ public class SearchTree{
         //long currentTime         = System.currentTimeMillis();
         //while(currentTime+5000 >System.currentTimeMillis()){
         
-        for(int jk=0;jk<7;jk++){
+        for(int jk=0;jk<5;jk++){
             bestMoveGrading = Integer.MIN_VALUE;
             searchNodesNextStep(root, currentSearchColor);
             NegaAlphaBeta(root,jk+2, Integer.MIN_VALUE, Integer.MAX_VALUE);
@@ -164,6 +166,18 @@ public class SearchTree{
                 Color oposite = c.equals(Color.RED)?Color.BLACK:Color.RED;
                 PanelRules pr = new PanelRules(fooSold);
                 ArrayList<JumpPosition> NextNodes = pr.getLegalMoves(oposite, fooSold);
+                int maxNumberOfMoves = 0;
+                for(int i=0;i<NextNodes.size();i++)
+                    if(maxNumberOfMoves < NextNodes.get(i).jumpPosition.size())
+                        maxNumberOfMoves = NextNodes.get(i).jumpPosition.size();
+                
+                for(int i=0;i<NextNodes.size();i++){
+                    if(NextNodes.get(i).jumpPosition.size()< maxNumberOfMoves){
+                        NextNodes.remove(i);
+                        i--;
+                    }
+                }
+                
                 n.next = new ArrayList<>();
                 
                 for(JumpPosition nextNode: NextNodes){
@@ -182,7 +196,6 @@ public class SearchTree{
                         }
                     }else 
                         n.next.add(newNode);
-
                 }
             }
     

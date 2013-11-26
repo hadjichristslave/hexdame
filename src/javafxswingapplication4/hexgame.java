@@ -233,11 +233,7 @@ public class hexgame
                             Color invcolorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
                             try {
                                 getLegalMoves(colorTurn);
-                            } catch (CloneNotSupportedException ex) {
-                                Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
-                            } catch (FileNotFoundException ex) {
-                                Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
-                            } catch (UnsupportedEncodingException ex) {
+                            } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException ex) {
                                 Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
                             }
                             
@@ -352,7 +348,6 @@ public class hexgame
                                              }
                                         }
                                     }
-                                    //Letting the oponent go two moves ahead, finding the best move then
                                     try {
                                         playAMove(colorTurn , getLegalMoves(colorTurn));
                                     } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException ex) {
@@ -493,32 +488,62 @@ public class hexgame
         }
         
         public void playAMove(Color colorTurn, ArrayList<JumpPosition> availableMoves) throws CloneNotSupportedException{
-            System.out.println("played a move");
             Color oposite = colorTurn.equals(Color.RED)?Color.BLACK:Color.RED;
             SearchTree sT = new SearchTree(gamePiecesr);
-
-            //ArrayList<JumpPosition> principleVariation;
+            
+            for(JumpPosition jP:availableMoves){
+                jP.jumpPosition.get(0).from.x = 0;
+                jP.jumpPosition.get(0).from.y = 0;
+                jP.jumpPosition.get(0).to.x = 0;
+                jP.jumpPosition.get(0).to.y = 0;
+                jP.jumpPosition.get(0).jumps.x = 0;
+                jP.jumpPosition.get(0).jumps.y = 0;
+            }
             ArrayList<JumpPosition> getMoves = sT.initializeAndSearchTree(availableMoves , colorTurn);
-            for(JumpPosition jP:getMoves)
-                jP.print(false);
+            
             int move = (int)(Math.random()*(getMoves.size()-1));
+            
+            System.out.println(getMoves.size());
+            
             int index = getMoves.get(move).jumpPosition.get(1).from.x==Integer.MAX_VALUE?2:1;
             Point from  = getMoves.get(move).jumpPosition.get(index).from;
-            Point to    = getMoves.get(move).jumpPosition.get(index).to;
-            Point jumps = getMoves.get(move).jumpPosition.get(index).jumps;
-            for(Soldier sol: gamePiecesr){
-                if(sol.i == from.x && sol.j == from.y){
-                    sol.i = to.x;
-                    sol.j = to.y;
-                }            
+            Point to    = new Point();
+            
+            
+            int endIndex = index;
+            for(int j = index+1;j<getMoves.get(move).jumpPosition.size();j++){
+                if(getMoves.get(move).jumpPosition.get(j-1).to.x == getMoves.get(move).jumpPosition.get(j).from.x 
+                && getMoves.get(move).jumpPosition.get(j-1).to.y == getMoves.get(move).jumpPosition.get(j).from.y){
+                    endIndex = j;
+                }else 
+                    break;
             }
+            if(index!= endIndex){
+                for(int j = index;j<=endIndex;j++)
+                    for(int i=0;i<gamePiecesr.size();i++)
+                        if(gamePiecesr.get(i).i == getMoves.get(move).jumpPosition.get(j).jumps.x 
+                        && gamePiecesr.get(i).j == getMoves.get(move).jumpPosition.get(j).jumps.y)
+                            gamePiecesr.remove(i);
+            }else{
+                for(int i=0;i<gamePiecesr.size();i++)
+                    if(gamePiecesr.get(i).i == getMoves.get(move).jumpPosition.get(index).jumps.x 
+                    && gamePiecesr.get(i).j == getMoves.get(move).jumpPosition.get(index).jumps.y)
+                        gamePiecesr.remove(i);              
+            }
+            to.x =  getMoves.get(move).jumpPosition.get(endIndex).to.x ;
+            to.y =  getMoves.get(move).jumpPosition.get(endIndex).to.y ;
             for(int i=0;i<gamePiecesr.size();i++){
-                if(gamePiecesr.get(i).i == jumps.x && gamePiecesr.get(i).j == jumps.y){
-                   gamePiecesr.remove(i);
-                   break;
-                }       
-                
+                Soldier sol = gamePiecesr.get(i);
+                if(sol.i == from.x && sol.j == from.y){
+                       sol.i = to.x;
+                       sol.j = to.y;
+                       if(isKingSquare(sol.i,sol.j,  sol.C))
+                            sol.isKing = true;
+                   }
             }
+            
+            //getMoves.get(move).print();
+            
             
             pr.updatePieces(gamePiecesr);
             updateTurn();
