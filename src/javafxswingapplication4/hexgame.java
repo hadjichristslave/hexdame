@@ -488,7 +488,7 @@ public class hexgame
         }
         
         public void playAMove(Color colorTurn, ArrayList<JumpPosition> availableMoves) throws CloneNotSupportedException{
-            Color oposite = colorTurn.equals(Color.RED)?Color.BLACK:Color.RED;
+            
             SearchTree sT = new SearchTree(gamePiecesr);
             
             for(JumpPosition jP:availableMoves){
@@ -499,11 +499,14 @@ public class hexgame
                 jP.jumpPosition.get(0).jumps.x = 0;
                 jP.jumpPosition.get(0).jumps.y = 0;
             }
+            //Addming the first move only all other first moves, redundand.
+            JumpPosition startingMove = availableMoves.get(0);
+            sT.root.jP = startingMove;
             ArrayList<JumpPosition> getMoves = sT.initializeAndSearchTree(availableMoves , colorTurn);
+            for(JumpPosition jP:getMoves)
+                jP.print();
             
             int move = (int)(Math.random()*(getMoves.size()-1));
-            
-            System.out.println(getMoves.size());
             
             int index = getMoves.get(move).jumpPosition.get(1).from.x==Integer.MAX_VALUE?2:1;
             Point from  = getMoves.get(move).jumpPosition.get(index).from;
@@ -541,9 +544,6 @@ public class hexgame
                             sol.isKing = true;
                    }
             }
-            
-            //getMoves.get(move).print();
-            
             
             pr.updatePieces(gamePiecesr);
             updateTurn();
