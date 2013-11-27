@@ -6,6 +6,8 @@ package javafxswingapplication4;
 import java.awt.Color;
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,7 +49,7 @@ public class SearchTree{
              
              int[][] kingSquares = sl.C.equals(Color.black)?blackKingSquares:redKingSquares;
              if(sl.C.equals(c) && is(sl.i, sl.j , kingSquares)){
-                 System.out.println("Hypothetical king square " + sl.i + " " + sl.j);
+                //System.out.println("Hypothetical king square " + sl.i + " " + sl.j);
                 heuristicVal = heuristicVal+6;
              }
              
@@ -133,25 +135,24 @@ public class SearchTree{
         root.next = null;
 //        searchNodesNextStep(root, currentSearchColor);
 //        NegaAlphaBeta(root,2, Integer.MIN_VALUE, Integer.MAX_VALUE);
-        //long currentTime         = System.currentTimeMillis();
-        //while(currentTime+5000 >System.currentTimeMillis()){
         
+        //while(currentTime+5000 >System.currentTimeMillis()){
+        long currentTime         = System.currentTimeMillis();
+        System.out.println("benchmarking started at " + currentTime);
         for(int jk=0;jk<4;jk++){
             searchNodesNextStep(root, currentSearchColor);
+            sortNodes(root);
             NegaAlphaBeta(root,jk+2, Integer.MIN_VALUE, Integer.MAX_VALUE);
             currentSearchColor = toggleColor(currentSearchColor);
+            long tempTime = System.currentTimeMillis()-currentTime;
+            System.out.println(jk + " ply at " + tempTime + " milisecseconds" );
         }
-        
-        bestMoveGrading = Integer.MIN_VALUE;
-        System.out.println(bestMoveGrading);
-        getBestMoveGrading(root);
-        System.out.println(bestMoveGrading);
-        
-        principleVariation = new JumpPosition();
+        long tempTime  =System.currentTimeMillis()-currentTime;
+        System.out.println("benchmarking end at " + tempTime);
         
         bestMovesCalculated = new ArrayList<>();
         principleVariation(root, true);
-        //populateMoves(root);
+        
         System.out.println(bestMovesCalculated.size());
         
         return bestMovesCalculated;
@@ -274,7 +275,7 @@ public class SearchTree{
                   if(maxUtil<sd.value)  
                       maxUtil = sd.value;
                 for(Node sd: n.next)
-                    if(maxUtil>=sd.value + (Math.random()*1-1) )
+                    if(maxUtil==sd.value/* + (Math.random()*1-1)*/ )
                         principleVariation(sd , max?false:true);
             }else{
                 int minUtil = Integer.MAX_VALUE;
@@ -282,7 +283,7 @@ public class SearchTree{
                   if(minUtil>sd.value)  
                       minUtil = sd.value;
                 for(Node sd: n.next)
-                    if(minUtil<=sd.value+ (Math.random()*1))
+                    if(minUtil==sd.value/*+ (Math.random()*1)*/)
                         principleVariation(sd , max?false:true);
             }
         
@@ -306,14 +307,15 @@ public class SearchTree{
                 }
                 if(n.value<0) n.value = -n.value;
                 
-                if(score>=beta) {                    
+                if(score>=beta) {
+                    
                     while (n.next.size()>il+1)    n.next.remove(il+1);   
                     break;
                 }
             }
         }
         else
-            return heuristicValue(Color.black, setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition));    
+            return heuristicValue(Color.black, setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition));
         return score;
     }
     
@@ -324,5 +326,16 @@ public class SearchTree{
             newNode = newNode.previous;
         }
         return counter;
+    }
+    public void sortNodes(Node n){
+        if(n.next!=null){
+            Collections.sort(n.next, new Comparator<Node>() {
+                @Override
+                public int compare(Node o1, Node o2) {
+                    return o2.value-o1.value;
+                }
+            });
+            for(Node sd: n.next) sortNodes(sd);
+        }
     }
 }
