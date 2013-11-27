@@ -503,12 +503,20 @@ public class hexgame
             JumpPosition startingMove = availableMoves.get(0);
             sT.root.jP = startingMove;
             ArrayList<JumpPosition> getMoves = sT.initializeAndSearchTree(availableMoves , colorTurn);
-            for(JumpPosition jP:getMoves)
-                jP.print();
+            
             
             int move = (int)(Math.random()*(getMoves.size()-1));
             
-            int index = getMoves.get(move).jumpPosition.get(1).from.x==Integer.MAX_VALUE?2:1;
+            getMoves.get(move).print(true);
+            int index = 0;
+            Color oposite = colorTurn.equals(Color.RED)?Color.BLACK:Color.RED;
+            while(getMoves.get(move).jumpPosition.get(index).from.x == Integer.MAX_VALUE
+                || ( getMoves.get(move).jumpPosition.get(index).from.x == 0 
+                  && getMoves.get(move).jumpPosition.get(index).from.y == 0)
+                ||!containsSoldier(new Soldier(getMoves.get(move).jumpPosition.get(index).from.x, 
+                    getMoves.get(move).jumpPosition.get(index).from.y , oposite),gamePiecesr )){            
+                index++;
+            }
             Point from  = getMoves.get(move).jumpPosition.get(index).from;
             Point to    = new Point();
             
@@ -548,5 +556,11 @@ public class hexgame
             pr.updatePieces(gamePiecesr);
             updateTurn();
             
+        }
+        public boolean containsSoldier(Soldier test, ArrayList<Soldier> gamePiece){
+            for (int i=0;i<gamePiece.size();i++)
+                if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j && test.C.equals(gamePiece.get(i).C))
+                    return true;
+            return false;
         }
 }
