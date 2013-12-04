@@ -92,7 +92,7 @@ public class hexgame
             
  		DrawingPanel panel = new DrawingPanel();
 		//JFrame.setDefaultLookAndFeelDecorated(true);
-		JFrame frame = new JFrame("HexDame v0.3");
+		JFrame frame = new JFrame("HexDame v0.5");
 		frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
                 
 		Container content = frame.getContentPane();
@@ -507,7 +507,7 @@ public class hexgame
             
             int move = (int)(Math.random()*(getMoves.size()-1));
             
-            getMoves.get(move).print(true);
+            //getMoves.get(move).print(true);
             int index = 0;
             Color oposite = colorTurn.equals(Color.RED)?Color.BLACK:Color.RED;
             while(getMoves.get(move).jumpPosition.get(index).from.x == Integer.MAX_VALUE

@@ -37,32 +37,45 @@ public class SearchTree{
     }
     public int heuristicValue(Color c , ArrayList<Soldier> solListy) throws CloneNotSupportedException{
         Color oposite = c.equals(Color.RED)?Color.BLACK:Color.RED;
+        Color opositeEvaluation = Color.BLACK;
+        Color colorEvaluated = Color.red;
         int heuristicVal = 0;
+        
+        int soldierCount = 0;
+        for(Soldier sl:solListy)
+            if(sl.C.equals(opositeEvaluation))
+                soldierCount++;
+        
+        if(soldierCount==0)
+            heuristicVal +=100;
+        
         for(Soldier sl:solListy){
             PanelRules pr = new PanelRules(solListy);
-            if(sl.C.equals(c))
+            if(sl.C.equals(colorEvaluated))
                 heuristicVal = sl.isKing?(heuristicVal+6):(heuristicVal+2);
-            if(sl.C.equals(c) && is(sl.i, sl.j , sideSquares))
+            if(sl.C.equals(colorEvaluated) && is(sl.i, sl.j , sideSquares))
                 heuristicVal = heuristicVal+2;
-             if(sl.C.equals(c) && is(sl.i, sl.j , centerSquares) )
+             if(sl.C.equals(colorEvaluated) && is(sl.i, sl.j , centerSquares) )
                 heuristicVal = heuristicVal+2;
              
-             int[][] kingSquares = sl.C.equals(Color.black)?blackKingSquares:redKingSquares;
-             if(sl.C.equals(c) && is(sl.i, sl.j , kingSquares)){
+             int[][] kingSquares = redKingSquares;
+             if(sl.C.equals(colorEvaluated) && is(sl.i, sl.j , kingSquares)){
                 //System.out.println("Hypothetical king square " + sl.i + " " + sl.j);
                 heuristicVal = heuristicVal+6;
              }
              
-            if(sl.C.equals(oposite)
+            if( (sl.C.equals(opositeEvaluation) && oposite.equals(opositeEvaluation))
             && !(pr.kingJumpPositions(new Point(sl.i, sl.j), c, true).size()>0
             || pr.getJumps(new Point(sl.i, sl.j), c, true).size()>0) )
-                heuristicVal = heuristicVal+3;            
+                heuristicVal = heuristicVal+3;
             
             ArrayList<JumpPosition> tempJp = new ArrayList<>();
-                if(sl.isKing && sl.C.equals(c)){
+                if(sl.isKing 
+                && sl.C.equals(c) 
+                && colorEvaluated.equals(c)){
                     try {
                         tempJp = new ArrayList<>();
-                        tempJp = pr.kingJumpPositions(new Point(sl.i, sl.j), c, true);
+                        tempJp = pr.kingJumpPositions(new Point(sl.i, sl.j), colorEvaluated, true);
                         if(tempJp.size()>0){
                             heuristicVal = heuristicVal+4;
 //                            JumpPosition jP = tempJp.get(0);                            
@@ -80,12 +93,13 @@ public class SearchTree{
                   } catch (CloneNotSupportedException ex) {
                       Logger.getLogger(SearchTree.class.getName()).log(Level.SEVERE, null, ex);
                   }
-                }else if(sl.C.equals(c)){
+                }else if(sl.C.equals(c)
+                      && colorEvaluated.equals(c)){
                     try {
                         tempJp = new ArrayList<>();
-                        tempJp = pr.getJumps(new Point(sl.i, sl.j),sl.C,true);
+                        tempJp = pr.getJumps(new Point(sl.i, sl.j),colorEvaluated,true);
                         if(tempJp.size()>0){
-                              heuristicVal = heuristicVal+2;
+                              heuristicVal = heuristicVal+3;
                               
 //                            JumpPosition jP = tempJp.get(0);
 //                            ArrayList<Soldier> fooSold = setupSoldiersGivenJumpPosition(solList, jP.jumpPosition);
@@ -137,25 +151,62 @@ public class SearchTree{
 //        NegaAlphaBeta(root,2, Integer.MIN_VALUE, Integer.MAX_VALUE);
         
         //while(currentTime+5000 >System.currentTimeMillis()){
+        
+        /*
+         * guess = 0;
+for( depth = 1; TimeAvailable(); depth++ ) {
+	alpha = guess - Δ; beta = guess + Δ;
+	score = AlphaBeta(depth, alpha, beta)
+	if( score >= beta ) {
+		alpha = score; beta = ∞;
+		score = AlphaBeta(depth, alpha, beta)
+	} else if( score <= alpha ) {
+	alpha = -∞; beta = score;
+	score = AlphaBeta(depth, alpha, beta) 	
+	}
+	guess = score;
+}
+         
+         */
+        int guess = 20;
+        int delta = 20;
+        int alpha,beta,score;
+                
         long currentTime         = System.currentTimeMillis();
         System.out.println("benchmarking started at " + currentTime);
-        for(int jk=0;jk<4;jk++){
+        for(int jk=0;jk<20;jk++){
             searchNodesNextStep(root, currentSearchColor);
             sortNodes(root);
             NegaAlphaBeta(root,jk+2, Integer.MIN_VALUE, Integer.MAX_VALUE);
+            
+            alpha = guess - delta; beta = guess + delta;
+            score = NegaAlphaBeta(root,jk+2, alpha, beta);
+            score = score<0?-score:score;
+            if( score >= beta ) {
+                    alpha = score; beta = Integer.MAX_VALUE;
+                    score = NegaAlphaBeta(root,jk+2, alpha, beta);
+            } else if( score <= alpha ) {
+                alpha = Integer.MIN_VALUE; beta = score;
+                score = NegaAlphaBeta(root,jk+2, alpha, beta);
+            }
+            
+            
+            
             currentSearchColor = toggleColor(currentSearchColor);
             long tempTime = System.currentTimeMillis()-currentTime;
             System.out.println(jk + " ply at " + tempTime + " milisecseconds" );
         }
         long tempTime  =System.currentTimeMillis()-currentTime;
-        System.out.println("benchmarking end at " + tempTime);
+        //System.out.println("benchmarking end at " + tempTime);
         
         bestMovesCalculated = new ArrayList<>();
+        
         principleVariation(root, true);
-        
         System.out.println(bestMovesCalculated.size());
-        
         return bestMovesCalculated;
+        
+        //printNodes(root);
+        
     }
     public Color toggleColor(Color c){
         return c.equals(Color.black)?Color.red:Color.black;
@@ -181,8 +232,16 @@ public class SearchTree{
             if(n.next!=null) for(Node sd: n.next)           printNodes(sd);
             else{
                 if(n.value >=bestMoveGrading + (Math.random()*2-4) ){
-                    n.jP.print();
-                    System.out.println(n.value);
+                    
+                    n.jP.print(true);
+                    Node we = n.previous;
+                    while(we.previous!=null){
+                        System.out.println("<--");
+                        we.jP.print(true);
+                        we = we.previous;
+                    }
+                    System.out.println("new node calc");
+                    
                 }
             }
     }
@@ -272,18 +331,18 @@ public class SearchTree{
             if(max){
                 int maxUtil = Integer.MIN_VALUE;
                 for(Node sd: n.next)
-                  if(maxUtil<sd.value)  
+                  if(maxUtil<=sd.value)  
                       maxUtil = sd.value;
                 for(Node sd: n.next)
-                    if(maxUtil==sd.value/* + (Math.random()*1-1)*/ )
+                    if(maxUtil>=sd.value + (Math.random()*2-2) )
                         principleVariation(sd , max?false:true);
             }else{
                 int minUtil = Integer.MAX_VALUE;
                 for(Node sd: n.next)
-                  if(minUtil>sd.value)  
+                  if(minUtil>=sd.value)  
                       minUtil = sd.value;
                 for(Node sd: n.next)
-                    if(minUtil==sd.value/*+ (Math.random()*1)*/)
+                    if(minUtil<=sd.value+ (Math.random()*2))
                         principleVariation(sd , max?false:true);
             }
         
