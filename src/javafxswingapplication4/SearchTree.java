@@ -152,28 +152,23 @@ public class SearchTree{
                 return true;
         return false;    
     }
-    //Correct way to modify soldier list without modifying hexgame gamepiecesr structure
-          
+    //Correct way to modify soldier list without modifying hexgame gamepiecesr structure          
     public void cloneandtwinklewith(){
         ArrayList<Soldier> sL = (ArrayList<Soldier>) solList.clone();
         sL.add(new Soldier(0, 0, Color.RED));
     }
+    
     public ArrayList<JumpPosition> initializeAndSearchTree(ArrayList<JumpPosition> 
             jPList , Color c)  throws CloneNotSupportedException{
         Color currentSearchColor = c;
         root.next = null;
-//        searchNodesNextStep(root, currentSearchColor);
-//        NegaAlphaBeta(root,2, Integer.MIN_VALUE, Integer.MAX_VALUE);
-        
+        TranspTable tT = new TranspTable();
         //while(currentTime+5000 >System.currentTimeMillis()){
-
-        int guess = 40;
-        int delta = 40;
         int alpha,beta,score;
                 
         long currentTime         = System.currentTimeMillis();
         //System.out.println("benchmarking started at " + currentTime);
-        for(int jk=0;jk<4;jk++){
+        for(int jk=0;jk<6;jk++){
             searchNodesNextStep(root, currentSearchColor);
             sortNodes(root);
             //NegaAlphaBeta(root,jk+2, Integer.MIN_VALUE, Integer.MAX_VALUE);
@@ -194,18 +189,6 @@ public class SearchTree{
                 }
             }
             
-            
-//            
-//            alpha = guess - delta; beta = guess + delta;
-//            score = NegaAlphaBeta(root,jk+2, alpha, beta);
-//            score = score<0?-score:score;
-//            if( score >= beta ) {
-//                    alpha = score; beta = Integer.MAX_VALUE;
-//                    score = NegaAlphaBeta(root,jk+2, alpha, beta);
-//            } else if( score <= alpha ) {
-//                alpha = Integer.MIN_VALUE; beta = score;
-//                score = NegaAlphaBeta(root,jk+2, alpha, beta);
-//            }
             currentSearchColor = toggleColor(currentSearchColor);
             long tempTime = System.currentTimeMillis()-currentTime;
             //System.out.println(jk + " ply at " + tempTime + " milisecseconds" );
@@ -216,11 +199,6 @@ public class SearchTree{
         bestMovesCalculated = new ArrayList<>();
         
         principleVariation(root, true);
-        printNodes(root);
-//        for(JumpPosition jP:bestMovesCalculated){
-//            jP.print(false);
-//            System.out.println("--------------------------------");
-//        }
         System.out.println(bestMovesCalculated.size());
         return bestMovesCalculated;
         
