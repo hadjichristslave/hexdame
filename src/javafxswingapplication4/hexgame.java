@@ -89,13 +89,11 @@ public class hexgame
 	}
  
 	private void createAndShowGUI(){
-            
  		DrawingPanel panel = new DrawingPanel();
 		//JFrame.setDefaultLookAndFeelDecorated(true);
 		JFrame frame = new JFrame("HexDame v0.5");
 		frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
-                
-		Container content = frame.getContentPane();
+                Container content = frame.getContentPane();
                 content.add(panel);
                                 
 		//this.add(panel);  -- cannot be done in a static context
@@ -225,15 +223,7 @@ public class hexgame
  
 		class MyMouseListener extends MouseAdapter  {	//inner class inside DrawingPanel 
                         @Override
-                        public void mouseClicked(MouseEvent e ) {
-                            SearchTree sT = new SearchTree(gamePiecesr);
-                            try {
-                                System.out.println(sT.heuristicValue(Color.red, gamePiecesr));
-                                System.out.println(sT.heuristicValue(Color.black, gamePiecesr));
-                            } catch (CloneNotSupportedException ex) {
-                                Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                            
+                        public void mouseClicked(MouseEvent e ) {                            
                             ArrayList<Point> legalMoves;
                             Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );                            
                             Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
@@ -510,7 +500,6 @@ public class hexgame
             JumpPosition startingMove = availableMoves.get(0);
             sT.root.jP = startingMove;
             ArrayList<JumpPosition> getMoves = sT.initializeAndSearchTree(availableMoves , colorTurn);
-            
             
             int move = (int)(Math.random()*(getMoves.size()-1));
             
