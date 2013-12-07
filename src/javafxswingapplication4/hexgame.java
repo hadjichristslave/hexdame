@@ -226,6 +226,13 @@ public class hexgame
 		class MyMouseListener extends MouseAdapter  {	//inner class inside DrawingPanel 
                         @Override
                         public void mouseClicked(MouseEvent e ) {
+                            SearchTree sT = new SearchTree(gamePiecesr);
+                            try {
+                                System.out.println(sT.heuristicValue(Color.red, gamePiecesr));
+                                System.out.println(sT.heuristicValue(Color.black, gamePiecesr));
+                            } catch (CloneNotSupportedException ex) {
+                                Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                             
                             ArrayList<Point> legalMoves;
                             Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );                            
@@ -466,8 +473,6 @@ public class hexgame
                                         availableMoves.add(jP);                                        
                                     }                                
                                 }
-                                
-                                
                             }
                         //Get all moves no jumps included
                         if(gamePiecesr.get(i).C==colorTurn){
@@ -499,6 +504,8 @@ public class hexgame
                 jP.jumpPosition.get(0).jumps.x = 0;
                 jP.jumpPosition.get(0).jumps.y = 0;
             }
+            while(availableMoves.get(0).jumpPosition.size()>1)
+                availableMoves.get(0).jumpPosition.remove(1);
             //Addming the first move only all other first moves, redundand.
             JumpPosition startingMove = availableMoves.get(0);
             sT.root.jP = startingMove;
@@ -514,9 +521,11 @@ public class hexgame
                 || ( getMoves.get(move).jumpPosition.get(index).from.x == 0 
                   && getMoves.get(move).jumpPosition.get(index).from.y == 0)
                 ||!containsSoldier(new Soldier(getMoves.get(move).jumpPosition.get(index).from.x, 
-                    getMoves.get(move).jumpPosition.get(index).from.y , oposite),gamePiecesr )){            
+                    getMoves.get(move).jumpPosition.get(index).from.y , oposite),gamePiecesr )){        
                 index++;
             }
+            //System.out.println(index);
+            
             Point from  = getMoves.get(move).jumpPosition.get(index).from;
             Point to    = new Point();
             

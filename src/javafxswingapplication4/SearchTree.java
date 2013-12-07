@@ -36,7 +36,6 @@ public class SearchTree{
         this.root.previous = null;
     }
     public int heuristicValue(Color c , ArrayList<Soldier> solListy) throws CloneNotSupportedException{
-        Color oposite = c.equals(Color.RED)?Color.BLACK:Color.RED;
         Color opositeEvaluation = Color.BLACK;
         Color colorEvaluated = Color.red;
         int heuristicVal = 0;
@@ -49,66 +48,76 @@ public class SearchTree{
         if(soldierCount==0)
             heuristicVal +=100;
         
+        int canBeJumped = 0;
         for(Soldier sl:solListy){
             PanelRules pr = new PanelRules(solListy);
             if(sl.C.equals(colorEvaluated))
-                heuristicVal = sl.isKing?(heuristicVal+6):(heuristicVal+2);
+                heuristicVal = sl.isKing?(heuristicVal+5):(heuristicVal+2);
             if(sl.C.equals(colorEvaluated) && is(sl.i, sl.j , sideSquares))
-                heuristicVal = heuristicVal+2;
-             if(sl.C.equals(colorEvaluated) && is(sl.i, sl.j , centerSquares) )
-                heuristicVal = heuristicVal+2;
+                heuristicVal+=2;
+            if(sl.C.equals(colorEvaluated) && is(sl.i, sl.j , centerSquares) )
+                heuristicVal =+2;             
+            int[][] kingSquares = redKingSquares;
+            if(sl.C.equals(colorEvaluated) && is(sl.i, sl.j , kingSquares))
+                heuristicVal+=5;
              
-             int[][] kingSquares = redKingSquares;
-             if(sl.C.equals(colorEvaluated) && is(sl.i, sl.j , kingSquares)){
-                //System.out.println("Hypothetical king square " + sl.i + " " + sl.j);
-                heuristicVal = heuristicVal+6;
-             }
-             
-            if( (sl.C.equals(opositeEvaluation) && oposite.equals(opositeEvaluation))
-            && !(pr.kingJumpPositions(new Point(sl.i, sl.j), c, true).size()>0
-            || pr.getJumps(new Point(sl.i, sl.j), c, true).size()>0) )
-                heuristicVal = heuristicVal+3;
-            
+             /*
+              * When black is playing, count if pieces can be captured.
+              * if they can't,it's a better position for red soldiers
+              */
+            if(c.equals(opositeEvaluation)){
+                if(sl.C.equals(opositeEvaluation)
+                && !sl.isKing
+                && pr.getJumps(new Point(sl.i, sl.j), opositeEvaluation, true).size()>0)
+                    canBeJumped++;
+                if( sl.C.equals(opositeEvaluation)
+                && sl.isKing
+                && pr.getJumps(new Point(sl.i, sl.j), opositeEvaluation, true).size()==0)
+                    canBeJumped++;
+            }
             ArrayList<JumpPosition> tempJp = new ArrayList<>();
                 if(sl.isKing 
-                && sl.C.equals(c) 
-                && colorEvaluated.equals(c)){
+                && sl.C.equals(colorEvaluated)
+                && sl.C.equals(c)){
                     try {
                         tempJp = new ArrayList<>();
                         tempJp = pr.kingJumpPositions(new Point(sl.i, sl.j), colorEvaluated, true);
                         if(tempJp.size()>0){
-                            heuristicVal = heuristicVal+4;
-//                            JumpPosition jP = tempJp.get(0);                            
-//                            ArrayList<Soldier> fooSold = setupSoldiersGivenJumpPosition(solList, jP.jumpPosition);
-//                            for(Soldier foosl:fooSold){
-//                                if(foosl.C.equals(oposite)
-//                                && !(pr.kingJumpPositions(new Point(foosl.i, foosl.j), c, true).size()>0
-//                                || pr.getJumps(new Point(foosl.i, foosl.j), c, true).size()>0) ){
-//                                    heuristicVal = heuristicVal+2;
-//
-//                                }
-//                            }
+                            heuristicVal = heuristicVal+3;
+                            JumpPosition jP = tempJp.get(0);                            
+                            ArrayList<Soldier> fooSold = setupSoldiersGivenJumpPosition(solList, jP.jumpPosition);
+                            boolean opponentRetaliates = false;
+                            for(Soldier foosl:fooSold){
+                                if(foosl.C.equals(opositeEvaluation)
+                                && (pr.kingJumpPositions(new Point(foosl.i, foosl.j), c, true).size()>0
+                                || pr.getJumps(new Point(foosl.i, foosl.j), c, true).size()>0) ){
+                                    opponentRetaliates = true;
+                                }
+                            }
+                            if(!opponentRetaliates) heuristicVal +=3;
                         
                       }
                   } catch (CloneNotSupportedException ex) {
                       Logger.getLogger(SearchTree.class.getName()).log(Level.SEVERE, null, ex);
                   }
-                }else if(sl.C.equals(c)
-                      && colorEvaluated.equals(c)){
+                }else if(sl.C.equals(colorEvaluated)
+                      && sl.C.equals(c)
+                      && !sl.isKing){
                     try {
                         tempJp = new ArrayList<>();
                         tempJp = pr.getJumps(new Point(sl.i, sl.j),colorEvaluated,true);
                         if(tempJp.size()>0){
-                              heuristicVal = heuristicVal+3;
-                              
-//                            JumpPosition jP = tempJp.get(0);
-//                            ArrayList<Soldier> fooSold = setupSoldiersGivenJumpPosition(solList, jP.jumpPosition);
-//                            for(Soldier foosl:fooSold){
-//                                if(foosl.C.equals(oposite)
-//                                && !(pr.kingJumpPositions(new Point(foosl.i, foosl.j), c, true).size()>0
-//                                || pr.getJumps(new Point(foosl.i, foosl.j), c, true).size()>0) )
-//                                    heuristicVal = heuristicVal+3;
-//                            }
+                            heuristicVal = heuristicVal+3;    
+                            JumpPosition jP = tempJp.get(0);
+                            ArrayList<Soldier> fooSold = setupSoldiersGivenJumpPosition(solList, jP.jumpPosition);
+                             boolean opponentRetaliates = false;
+                            for(Soldier foosl:fooSold){
+                                if(foosl.C.equals(opositeEvaluation)
+                                && (pr.kingJumpPositions(new Point(foosl.i, foosl.j), c, true).size()>0
+                                || pr.getJumps(new Point(foosl.i, foosl.j), c, true).size()>0) )
+                                    opponentRetaliates = true;
+                            }
+                            if(!opponentRetaliates) heuristicVal +=3;
                         
                       }
                   } catch (CloneNotSupportedException ex) {
@@ -116,6 +125,8 @@ public class SearchTree{
                   }
                 }
         }
+        if(canBeJumped==0)
+            heuristicVal += 6;
         
         return heuristicVal;
     }
@@ -151,50 +162,48 @@ public class SearchTree{
 //        NegaAlphaBeta(root,2, Integer.MIN_VALUE, Integer.MAX_VALUE);
         
         //while(currentTime+5000 >System.currentTimeMillis()){
-        
-        /*
-         * guess = 0;
-for( depth = 1; TimeAvailable(); depth++ ) {
-	alpha = guess - Δ; beta = guess + Δ;
-	score = AlphaBeta(depth, alpha, beta)
-	if( score >= beta ) {
-		alpha = score; beta = ∞;
-		score = AlphaBeta(depth, alpha, beta)
-	} else if( score <= alpha ) {
-	alpha = -∞; beta = score;
-	score = AlphaBeta(depth, alpha, beta) 	
-	}
-	guess = score;
-}
-         
-         */
-        int guess = 20;
-        int delta = 20;
+
+        int guess = 40;
+        int delta = 40;
         int alpha,beta,score;
                 
         long currentTime         = System.currentTimeMillis();
-        System.out.println("benchmarking started at " + currentTime);
-        for(int jk=0;jk<20;jk++){
+        //System.out.println("benchmarking started at " + currentTime);
+        for(int jk=0;jk<4;jk++){
             searchNodesNextStep(root, currentSearchColor);
             sortNodes(root);
-            NegaAlphaBeta(root,jk+2, Integer.MIN_VALUE, Integer.MAX_VALUE);
+            //NegaAlphaBeta(root,jk+2, Integer.MIN_VALUE, Integer.MAX_VALUE);
+            alpha = 0;
+            beta = Integer.MAX_VALUE;
             
-            alpha = guess - delta; beta = guess + delta;
-            score = NegaAlphaBeta(root,jk+2, alpha, beta);
-            score = score<0?-score:score;
-            if( score >= beta ) {
-                    alpha = score; beta = Integer.MAX_VALUE;
-                    score = NegaAlphaBeta(root,jk+2, alpha, beta);
-            } else if( score <= alpha ) {
-                alpha = Integer.MIN_VALUE; beta = score;
-                score = NegaAlphaBeta(root,jk+2, alpha, beta);
+            score = -NegaAlphaBeta( root.next.get(0),getDepth(root.next.get(0), 0), -beta, -alpha);
+            if( score < beta ) {
+                for( int i=1;i<root.next.size();i++ ) {
+                        int lbound = score>alpha?score:alpha ; int ubound = lbound + 1;
+                        int result = -NegaAlphaBeta(root.next.get(i),getDepth(root.next.get(0), 0), -ubound, -lbound);
+                        if( result >= ubound && result < beta ) {
+                           result = -NegaAlphaBeta( root.next.get(i),getDepth(root.next.get(0), 0), -beta, -result);
+                }
+                if( result > score ) score = result;
+                if( result >= beta ) break;
+                }
             }
             
             
-            
+//            
+//            alpha = guess - delta; beta = guess + delta;
+//            score = NegaAlphaBeta(root,jk+2, alpha, beta);
+//            score = score<0?-score:score;
+//            if( score >= beta ) {
+//                    alpha = score; beta = Integer.MAX_VALUE;
+//                    score = NegaAlphaBeta(root,jk+2, alpha, beta);
+//            } else if( score <= alpha ) {
+//                alpha = Integer.MIN_VALUE; beta = score;
+//                score = NegaAlphaBeta(root,jk+2, alpha, beta);
+//            }
             currentSearchColor = toggleColor(currentSearchColor);
             long tempTime = System.currentTimeMillis()-currentTime;
-            System.out.println(jk + " ply at " + tempTime + " milisecseconds" );
+            //System.out.println(jk + " ply at " + tempTime + " milisecseconds" );
         }
         long tempTime  =System.currentTimeMillis()-currentTime;
         //System.out.println("benchmarking end at " + tempTime);
@@ -202,7 +211,8 @@ for( depth = 1; TimeAvailable(); depth++ ) {
         bestMovesCalculated = new ArrayList<>();
         
         principleVariation(root, true);
-        System.out.println(bestMovesCalculated.size());
+        printNodes(root);
+        //System.out.println(bestMovesCalculated.size());
         return bestMovesCalculated;
         
         //printNodes(root);
@@ -225,24 +235,15 @@ for( depth = 1; TimeAvailable(); depth++ ) {
             if(n.next!=null)
                 for(Node sd: n.next) populateMoves(sd);
             else{
-                if(n.value >=bestMoveGrading + (Math.random()*2-5) ) bestMovesCalculated.add(n.jP);
+                if(n.value==bestMoveGrading ) bestMovesCalculated.add(n.jP);
             }
     }
     public void printNodes(Node n){
-            if(n.next!=null) for(Node sd: n.next)           printNodes(sd);
-            else{
-                if(n.value >=bestMoveGrading + (Math.random()*2-4) ){
-                    
-                    n.jP.print(true);
-                    Node we = n.previous;
-                    while(we.previous!=null){
-                        System.out.println("<--");
-                        we.jP.print(true);
-                        we = we.previous;
-                    }
-                    System.out.println("new node calc");
-                    
-                }
+            if(n.next!=null) for(Node sd: n.next) printNodes(sd);
+            else if(n.value >=bestMoveGrading ){
+                n.jP.print(true);
+                System.out.println(n.value);
+                System.out.println("------------------------------------");
             }
     }
     
@@ -304,7 +305,9 @@ for( depth = 1; TimeAvailable(); depth++ ) {
                 
                 for(JumpPosition nextNode: NextNodes){
                     JumpPosition jp = new JumpPosition();                    
-                    nextNode.jumpPosition.addAll(0 , n.jP.jumpPosition);                    
+                    nextNode.jumpPosition.addAll(0 , n.jP.jumpPosition);
+                    SearchNode sNn = new SearchNode(new Point(Integer.MAX_VALUE,Integer.MAX_VALUE),new Point(Integer.MAX_VALUE,Integer.MAX_VALUE),new Point(Integer.MAX_VALUE,Integer.MAX_VALUE));                    
+                    nextNode.jumpPosition.add(sNn);
                     
                     Node newNode =  new Node(nextNode, n);
                     newNode.value = heuristicValue(Color.BLACK, fooSold);
@@ -334,16 +337,16 @@ for( depth = 1; TimeAvailable(); depth++ ) {
                   if(maxUtil<=sd.value)  
                       maxUtil = sd.value;
                 for(Node sd: n.next)
-                    if(maxUtil>=sd.value + (Math.random()*2-2) )
-                        principleVariation(sd , max?false:true);
+                    if(maxUtil==sd.value/* + (Math.random()*1-1)*/ )
+                        principleVariation(sd,false);
             }else{
                 int minUtil = Integer.MAX_VALUE;
                 for(Node sd: n.next)
                   if(minUtil>=sd.value)  
                       minUtil = sd.value;
                 for(Node sd: n.next)
-                    if(minUtil<=sd.value+ (Math.random()*2))
-                        principleVariation(sd , max?false:true);
+                    if(minUtil==sd.value/*+ (Math.random()*1)*/)
+                        principleVariation(sd,true);
             }
         
         }
@@ -367,14 +370,15 @@ for( depth = 1; TimeAvailable(); depth++ ) {
                 if(n.value<0) n.value = -n.value;
                 
                 if(score>=beta) {
-                    
                     while (n.next.size()>il+1)    n.next.remove(il+1);   
                     break;
                 }
             }
         }
-        else
-            return heuristicValue(Color.black, setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition));
+        else{
+            Color currentTurn =  getDepth(n,0)%2==0?Color.BLACK:Color.RED;
+            return heuristicValue(currentTurn, setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition));
+        }
         return score;
     }
     
