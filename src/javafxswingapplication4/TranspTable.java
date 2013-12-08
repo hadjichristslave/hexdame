@@ -21,17 +21,5 @@ public class TranspTable {
         this.hashTable.put(hashkey, data);
     }
     
-    public class tableData{
-        int value;
-        caseType valuetype;
-        int hashId;
-        int depth;
-        public tableData(int val, int hashId, caseType valuetype, int depth ){
-            this.value     = val;
-            this.valuetype = valuetype;
-            this.hashId    = hashId;
-            this.depth     = depth;        
-        }
-    
-    }
+
 }

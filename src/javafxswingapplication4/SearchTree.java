@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafxswingapplication4.TranspTable.caseType;
 /**
  * @author Panos
  */
@@ -26,7 +27,8 @@ public class SearchTree{
                                             {1,4} , {2,5} , {3,4} , {4,5},{5,4} , {6,5} , {7,4}};
     final static int[ ][ ] redKingSquares = {{0,2},{1,1}, {2,1}, {3,0} ,{4,0}, {5,0} , {6,1}, {7,1} ,{8,2}};
     final static int[ ][ ] blackKingSquares = {{0,6}, {1,6}, {2,7}, {3,7} ,{4,8}, {5,7} , {6,7}, {7,6} , {8,6}};
-
+    TranspTable tT;
+    
     public int bestMoveGrading;
     public JumpPosition principleVariation;
     public ArrayList<JumpPosition> bestMovesCalculated;
@@ -34,6 +36,7 @@ public class SearchTree{
         this.solList = (ArrayList<Soldier>) solList.clone();
         this.root    = new Node();
         this.root.previous = null;
+        tT = new TranspTable();
     }
     public int heuristicValue(Color c , ArrayList<Soldier> solListy) throws CloneNotSupportedException{
         Color opositeEvaluation = Color.BLACK;
@@ -161,8 +164,9 @@ public class SearchTree{
     public ArrayList<JumpPosition> initializeAndSearchTree(ArrayList<JumpPosition> 
             jPList , Color c)  throws CloneNotSupportedException{
         Color currentSearchColor = c;
+        tT.hashTable.clear();
         root.next = null;
-        TranspTable tT = new TranspTable();
+        
         //while(currentTime+5000 >System.currentTimeMillis()){
         int alpha,beta,score;
                 
@@ -346,6 +350,36 @@ public class SearchTree{
         if(n.next!=null && depth>0){
             score = Integer.MIN_VALUE;
             for(int il=0;il<n.next.size();il++){
+                /*Iterate through the hash table first*/
+                
+                ArrayList<Soldier> fooSold  = new ArrayList<>();
+                for(Soldier p : solList) 
+                    fooSold.add((Soldier) p.clone());
+                fooSold = setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition);
+                
+                
+                boolean hash_hit = tT.hashTable.containsKey(fooSold.hashCode());
+                tableData tD     = tT.hashTable.get(fooSold.hashCode());
+                if(hash_hit && tD.depth>=getDepth(n, 0)){
+                  switch(tD.valuetype){
+                  case LOWER_BOUND:
+                    if(alpha<tD.value)
+                       alpha=tD.value;
+                       System.out.println("alpha modified to " + alpha);
+                    break;
+                  case UPPER_BOUND:
+                    if(beta>tD.value)
+                        beta=tD.value;
+                        System.out.println("beta modified to " + beta);
+                    break;
+                  case REAL:
+                    return tD.value;
+                  }
+                  if(alpha>=beta)
+                    return tD.value;
+                }
+                /*Iterate through the hash table first*/
+                
                 Node sd = n.next.get(il);
                 n.value = -NegaAlphaBeta(sd , depth-1, -beta, -alpha);
                 if(n.value>score) {
@@ -363,8 +397,24 @@ public class SearchTree{
             }
         }
         else{
+            /* Hash table insertions*/
             Color currentTurn = getDepth(n,0)%2==0?Color.BLACK:Color.RED;
-            return heuristicValue(currentTurn, setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition));
+            caseType cT=  TranspTable.caseType.LOWER_BOUND;
+            int value =heuristicValue(currentTurn, setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition));
+            int currentDepth = getDepth(n,0);
+            
+            ArrayList<Soldier> fooSold  = new ArrayList<>();
+            for(Soldier p : solList) 
+                fooSold.add((Soldier) p.clone());
+            fooSold = setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition);
+            if(value<beta) cT                     = caseType.UPPER_BOUND;
+            else if(value>alpha) cT               = caseType.LOWER_BOUND;
+            else if(value>beta && value<alpha) cT = caseType.REAL;
+            tableData tD = new tableData(value, cT, currentDepth);
+            tT.hashTable.put(fooSold.hashCode(),tD);
+            
+            /* value return as normal */
+            return value;
         }
         return score;
     }
