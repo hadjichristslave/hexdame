@@ -13,6 +13,7 @@ import javax.swing.*;
 import java.awt.event.*; 
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
@@ -31,14 +32,12 @@ import java.util.logging.Logger;
 public class hexgame
 {
     private ArrayList<Soldier> gamePiecesr = new ArrayList<Soldier>();
-    
     PanelRules pr;
     enum turn {RED, BLACK};
     public turn CurrentTurn;
     ArrayList moves = new ArrayList<Point>();
     Point currentSelection = new Point();
     int moveCounter    = 0;
-    
         private hexgame() {                
 		initGame();
 		createAndShowGUI();
@@ -68,7 +67,7 @@ public class hexgame
 	final static int SCRSIZE = HEXSIZE * (BSIZE + 1) + BORDERS*3; //screen size (vertical dimension).
         final static int[ ][ ] redKingSquares = {{0,2},{1,1}, {2,1}, {3,0} ,{4,0}, {5,0} , {6,1}, {7,1} ,{8,2}};
         final static int[ ][ ] blackKingSquares = {{0,6}, {1,6}, {2,7}, {3,7} ,{4,8}, {5,7} , {6,7}, {7,6} , {8,6}};
-        
+        final static int[] hashvalues = new int[1952];
         private ArrayList<Soldier>      captureSoldierPositionAndColor = new ArrayList<Soldier>();
         
         
@@ -87,7 +86,6 @@ public class hexgame
 		}
                 setupGamePieces();
 	}
- 
 	private void createAndShowGUI(){
  		DrawingPanel panel = new DrawingPanel();
 		//JFrame.setDefaultLookAndFeelDecorated(true);
@@ -347,7 +345,7 @@ public class hexgame
                                     }
                                     try {
                                         playAMove(colorTurn , getLegalMoves(colorTurn));
-                                    } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException ex) {
+                                    } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException | NoSuchAlgorithmException ex) {
                                         Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
                                     }
                                 }
@@ -482,7 +480,7 @@ public class hexgame
                 return availableMoves;
         }
         
-        public void playAMove(Color colorTurn, ArrayList<JumpPosition> availableMoves) throws CloneNotSupportedException{
+        public void playAMove(Color colorTurn, ArrayList<JumpPosition> availableMoves) throws CloneNotSupportedException, NoSuchAlgorithmException{
             
             SearchTree sT = new SearchTree(gamePiecesr);
             

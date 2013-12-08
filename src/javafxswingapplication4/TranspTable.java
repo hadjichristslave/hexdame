@@ -12,12 +12,12 @@ import java.util.HashMap;
  */
 
 public class TranspTable {
-    HashMap<Integer , tableData> hashTable;
+    HashMap<String , tableData> hashTable;
     public enum caseType {LOWER_BOUND, UPPER_BOUND, REAL};
     public TranspTable() {
         this.hashTable = new HashMap<>();
     }
-    public void add(int hashkey, tableData data){
+    public void add(String hashkey, tableData data){
         this.hashTable.put(hashkey, data);
     }
     

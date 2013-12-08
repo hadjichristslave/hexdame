@@ -5,6 +5,9 @@
 package javafxswingapplication4;
 import java.awt.Color;
 import java.awt.Point;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -88,7 +91,7 @@ public class SearchTree{
                         tempJp = new ArrayList<>();
                         tempJp = pr.kingJumpPositions(new Point(sl.i, sl.j), colorEvaluated, true);
                         if(tempJp.size()>0){
-                            System.out.println("our king jumps colro " + sl.C.toString());
+                            //System.out.println("our king jumps colro " + sl.C.toString());
                             heuristicVal = heuristicVal+2;
                             JumpPosition jP = tempJp.get(0);                            
                             ArrayList<Soldier> fooSold = setupSoldiersGivenJumpPosition(solList, jP.jumpPosition);
@@ -162,7 +165,7 @@ public class SearchTree{
     }
     
     public ArrayList<JumpPosition> initializeAndSearchTree(ArrayList<JumpPosition> 
-            jPList , Color c)  throws CloneNotSupportedException{
+            jPList , Color c)  throws CloneNotSupportedException, NoSuchAlgorithmException{
         Color currentSearchColor = c;
         tT.hashTable.clear();
         root.next = null;
@@ -172,12 +175,12 @@ public class SearchTree{
                 
         long currentTime         = System.currentTimeMillis();
         //System.out.println("benchmarking started at " + currentTime);
-        for(int jk=0;jk<6;jk++){
+        for(int jk=0;jk<5;jk++){
             searchNodesNextStep(root, currentSearchColor);
             sortNodes(root);
             //NegaAlphaBeta(root,jk+2, Integer.MIN_VALUE, Integer.MAX_VALUE);
-            alpha = Integer.MIN_VALUE;
-            beta = Integer.MAX_VALUE;
+            alpha = 0;
+            beta = 200;
             
             score = -NegaAlphaBeta( root.next.get(0),getDepth(root.next.get(0), 0)+1, -beta, -alpha);
             if(score<0) score = -score;
@@ -345,42 +348,49 @@ public class SearchTree{
             bestMovesCalculated.add(n.jP);
     }
 
-    public int NegaAlphaBeta(Node n, int depth, int alpha, int beta) throws CloneNotSupportedException{
+    public int NegaAlphaBeta(Node n, int depth, int alpha, int beta) throws CloneNotSupportedException, NoSuchAlgorithmException{
         int score;
         if(n.next!=null && depth>0){
             score = Integer.MIN_VALUE;
             for(int il=0;il<n.next.size();il++){
+                Node sd = n.next.get(il);
                 /*Iterate through the hash table first*/
+                
                 
                 ArrayList<Soldier> fooSold  = new ArrayList<>();
                 for(Soldier p : solList) 
                     fooSold.add((Soldier) p.clone());
-                fooSold = setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition);
+                fooSold = setupSoldiersGivenJumpPosition(solList, sd.jP.jumpPosition);
                 
                 
-                boolean hash_hit = tT.hashTable.containsKey(fooSold.hashCode());
-                tableData tD     = tT.hashTable.get(fooSold.hashCode());
-                if(hash_hit && tD.depth>=getDepth(n, 0)){
+                boolean hash_hit = tT.hashTable.containsKey(gethashvalue(fooSold));
+                
+                tableData tD     = tT.hashTable.get(gethashvalue(fooSold));
+                if(hash_hit && tD.depth>getDepth(sd, 0)){
                   switch(tD.valuetype){
                   case LOWER_BOUND:
-                    if(alpha<tD.value)
+                    if(alpha<tD.value){
                        alpha=tD.value;
                        System.out.println("alpha modified to " + alpha);
+                    }
                     break;
                   case UPPER_BOUND:
-                    if(beta>tD.value)
+                    if(beta>tD.value){
                         beta=tD.value;
                         System.out.println("beta modified to " + beta);
+                    }
                     break;
                   case REAL:
+                    System.out.println("asfsdafsadfs" );
                     return tD.value;
+                      
                   }
                   if(alpha>=beta)
                     return tD.value;
                 }
                 /*Iterate through the hash table first*/
                 
-                Node sd = n.next.get(il);
+                
                 n.value = -NegaAlphaBeta(sd , depth-1, -beta, -alpha);
                 if(n.value>score) {
                     score = n.value;
@@ -407,18 +417,36 @@ public class SearchTree{
             for(Soldier p : solList) 
                 fooSold.add((Soldier) p.clone());
             fooSold = setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition);
-            if(value<beta) cT                     = caseType.UPPER_BOUND;
-            else if(value>alpha) cT               = caseType.LOWER_BOUND;
+            if(value<beta) cT                     = caseType.LOWER_BOUND;
+            else if(value>alpha) cT               = caseType.UPPER_BOUND;
             else if(value>beta && value<alpha) cT = caseType.REAL;
             tableData tD = new tableData(value, cT, currentDepth);
-            tT.hashTable.put(fooSold.hashCode(),tD);
+            tT.hashTable.put(gethashvalue(fooSold),tD);
             
             /* value return as normal */
             return value;
         }
         return score;
     }
-    
+    public String gethashvalue(ArrayList<Soldier> sL) throws NoSuchAlgorithmException{
+        int hashvalue=0;
+        for(int i=0;i<sL.size();i++){
+            Soldier sol = sL.get(i);
+            String str = sol.C.equals(Color.BLACK)?"0":"1";
+            String val = sol.i +  "" + sol.j + "" + str;
+            int newXorVal = Integer.parseInt(val)*i;
+            hashvalue += newXorVal;
+        }
+        String plaintext = Integer.toString(hashvalue);
+        MessageDigest m = MessageDigest.getInstance("MD5");
+        m.reset();
+        m.update(plaintext.getBytes());
+        byte[] digest = m.digest();
+        BigInteger bigInt = new BigInteger(1,digest);
+        String hashtext = bigInt.toString(16);
+        
+        return hashtext;
+    }
     public int getDepth(Node n , int counter){
         Node newNode = n;
         while(newNode.previous!=null)   { 

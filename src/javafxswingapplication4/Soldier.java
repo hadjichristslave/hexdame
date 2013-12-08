@@ -6,6 +6,7 @@ package javafxswingapplication4;
 
 import java.awt.Color;
 import java.awt.Point;
+import java.util.ArrayList;
 /**
  *
  * @author Panos
@@ -38,5 +39,8 @@ public class Soldier implements Cloneable {
         public void print(){
             //System.out.println(this.i  + " " + this.j + " " + this.C.toString());
         }
-    
+    public static int solListHash(ArrayList<Soldier> sL){
+        
+        return 0;
+    }
 }
