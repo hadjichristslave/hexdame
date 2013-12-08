@@ -58,6 +58,7 @@ public class SearchTree{
             heuristicVal +=100;
         
         int canBeJumped = 0;
+        int canBeMultiJumped = 0;
         for(Soldier sl:solListy){
             PanelRules pr = new PanelRules(solListy);
             if(sl.C.equals(colorEvaluated))
@@ -74,16 +75,26 @@ public class SearchTree{
               * When black is playing, count if pieces can be captured.
               * if they can't,it's a better position for red soldiers
               */
+            ArrayList<JumpPosition> possiJumps = pr.getJumps(new Point(sl.i, sl.j), opositeEvaluation, true);
             if(c.equals(opositeEvaluation)){
                 if(sl.C.equals(opositeEvaluation)
                 && !sl.isKing
-                && pr.getJumps(new Point(sl.i, sl.j), opositeEvaluation, true).size()>0){
+                && possiJumps.size()>0){
                     canBeJumped++;
+                    if(possiJumps.get(0).jumpPosition.size()>2){
+                        canBeMultiJumped++;
+                        System.out.println("Hypo multi");
+                    }
+                    
                 }
+                possiJumps = pr.kingJumpPositions(new Point(sl.i, sl.j), opositeEvaluation, true);
                 if( sl.C.equals(opositeEvaluation)
                 && sl.isKing
-                && pr.getJumps(new Point(sl.i, sl.j), opositeEvaluation, true).size()==0)
+                && pr.kingJumpPositions(new Point(sl.i, sl.j), opositeEvaluation, true).size()==0){
                     canBeJumped++;
+                     if(possiJumps.get(0).jumpPosition.size()>2)
+                        canBeMultiJumped++;
+                }
             }
             ArrayList<JumpPosition> tempJp = new ArrayList<>();
                 if(sl.isKing 
@@ -138,8 +149,9 @@ public class SearchTree{
                 }
         }
         if(canBeJumped==0)
-            heuristicVal += 10;
-        
+            heuristicVal += 3;
+        if(canBeMultiJumped==0)
+            heuristicVal += 6;
         return heuristicVal;
     }
     public static boolean is(int x, int y , int[][] squareArray){
@@ -209,7 +221,9 @@ public class SearchTree{
         //printNodes(root);
         principleVariation(root, true);
         System.out.println(bestMovesCalculated.size());
-        
+        for(JumpPosition jP:bestMovesCalculated){
+            jP.print(true);
+        }
         return bestMovesCalculated;
         
         
