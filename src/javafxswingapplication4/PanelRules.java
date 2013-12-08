@@ -68,7 +68,7 @@ public class PanelRules {
      //Need to fix the isValidSoldier method.
      //Must search within the gamePieces List and return if
         public static boolean isValidSoldierSquare(int i, int j){
-             if( (j==0||j==8) && (i>1 && i<7) 
+             if( (j==0||j==8) && (i>1 && i<7)
                ||(j==1) && (i>0 && i<8)
                ||(j==7) && (i>0 && i<7)
                ||(j==2) && (i>1 && i<7)
