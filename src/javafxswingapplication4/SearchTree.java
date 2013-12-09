@@ -108,6 +108,8 @@ public class SearchTree{
                         if(tempJp.size()>0){
                             //System.out.println("our king jumps colro " + sl.C.toString());
                             heuristicVal +=2;
+                            if(tempJp.size()>3)
+                                heuristicVal+=2;
                             JumpPosition jP = tempJp.get(0);                            
                             ArrayList<Soldier> fooSold = setupSoldiersGivenJumpPosition(solList, jP.jumpPosition);
                             boolean opponentRetaliates = false;
@@ -131,7 +133,9 @@ public class SearchTree{
                         tempJp = new ArrayList<>();
                         tempJp = pr.getJumps(new Point(sl.i, sl.j),colorEvaluated,true);
                         if(tempJp.size()>0){
-                            heuristicVal = heuristicVal+1;    
+                            heuristicVal = heuristicVal+1;
+                            if(tempJp.size()>3)
+                                heuristicVal+=2;
                             JumpPosition jP = tempJp.get(0);
                             ArrayList<Soldier> fooSold = setupSoldiersGivenJumpPosition(solList, jP.jumpPosition);
                             boolean opponentRetaliates = false;
@@ -152,8 +156,12 @@ public class SearchTree{
         }
         if(canBeJumped==0)
             heuristicVal += 3;
+        else if(heuristicVal>3)
+            heuristicVal -=3;
         if(canBeMultiJumped==0)
             heuristicVal += 6;
+        else if(heuristicVal>6)
+            heuristicVal-=6;
         return heuristicVal;
     }
     public static boolean is(int x, int y , int[][] squareArray){
@@ -399,14 +407,14 @@ public class SearchTree{
                   case LOWER_BOUND:
                      int value = alpha<0?-tD.value:tD.value;
                     if(alpha<value){
-                       alpha= alpha<0?-tD.value:tD.value;
+                       alpha= tD.value<0?-tD.value:tD.value;
                        System.out.println("alpha modified to " + alpha);
                     }
                     break;
                   case UPPER_BOUND:
                     value = beta<0?-tD.value:tD.value;
                     if(beta>value){
-                        beta=beta<0?-tD.value:tD.value;
+                        beta=tD.value<0?-tD.value:tD.value;
                         System.out.println("beta modified to " + beta);
                     }
                     break;
