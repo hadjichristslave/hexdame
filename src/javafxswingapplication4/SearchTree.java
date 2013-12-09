@@ -31,7 +31,7 @@ public class SearchTree{
     final static int[ ][ ] redKingSquares = {{0,2},{1,1}, {2,1}, {3,0} ,{4,0}, {5,0} , {6,1}, {7,1} ,{8,2}};
     final static int[ ][ ] blackKingSquares = {{0,6}, {1,6}, {2,7}, {3,7} ,{4,8}, {5,7} , {6,7}, {7,6} , {8,6}};
     TranspTable tT;
-    final int tolerance=0;
+    final int tolerance=2;
     
     
     public int bestMoveGrading;

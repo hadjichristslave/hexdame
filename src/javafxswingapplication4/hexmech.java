@@ -10,6 +10,7 @@ package javafxswingapplication4;
  */
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
+import java.util.ArrayList;
 import javax.swing.*;
  
 /* This is a companion class to hexgame.java. It handles all of the mechanics related to hexagon grids. */
@@ -255,4 +256,25 @@ The hexagon is drawn in the colour specified in hexgame.COLOURELL.
 		p.y=y;
 		return p;
 	}
+
+    static void displayConflictMoves(ArrayList<JumpPosition> jP, Graphics2D g2 , int distanceFromBottom) {
+        int counter =0;
+        for(JumpPosition jp: jP){
+            String jump = "";
+            for(int i=0;i<jp.jumpPosition.size();i++){
+                SearchNode sN = jp.jumpPosition.get(i);
+                if(i==0)
+                    jump =jump+"press " + counter+  " for ";
+                if((sN.to.x!=0 &&sN.to.y!=0 )&& sN.to.x !=Integer.MAX_VALUE)
+                    jump =jump+ " " + sN.to.x + "-"  + sN.to.y + ","; 
+                
+            }
+            counter++;
+            int dist = distanceFromBottom-counter*30;
+            g2.setColor(Color.BLUE);
+            g2.drawString(jump, 15, dist);        
+        
+        }
+        //g2.drawString(x+","+y, x+r+BORDERS, y+r+BORDERS+4);
+    }
 }

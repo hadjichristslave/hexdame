@@ -69,7 +69,8 @@ public class hexgame
         final static int[ ][ ] blackKingSquares = {{0,6}, {1,6}, {2,7}, {3,7} ,{4,8}, {5,7} , {6,7}, {7,6} , {8,6}};
         final static int[] hashvalues = new int[1952];
         private ArrayList<Soldier>      captureSoldierPositionAndColor = new ArrayList<Soldier>();
-        
+        public boolean possibleConflictMove =false;
+        public ArrayList<JumpPosition> conflictListSolve = new ArrayList<>();
         
 	int[][] board = new int[BSIZE][BSIZE];
  
@@ -85,6 +86,7 @@ public class hexgame
 			}
 		}
                 setupGamePieces();
+                setnewGamePieces();
 	}
 	private void createAndShowGUI(){
  		DrawingPanel panel = new DrawingPanel();
@@ -96,7 +98,7 @@ public class hexgame
                                 
 		//this.add(panel);  -- cannot be done in a static context
 		//for hexes in the FLAT orientation, the height of a 10x10 grid is 1.1764 * the width. (from h / (s+t))
-		frame.setSize( (int)(SCRSIZE/1.23), SCRSIZE);
+		frame.setSize( (int)(SCRSIZE/1.23), SCRSIZE+100);
 		frame.setResizable(false);
 		frame.setLocationRelativeTo( null );
 		frame.setVisible(true);
@@ -115,6 +117,21 @@ public class hexgame
                         gamePiecesr.add(new Soldier(i , j , Color.black));
                     else if(PanelRules.isValidSquare(i, j) && PanelRules.isValidSoldierSquare(i, j) && j>4)
                         gamePiecesr.add(new Soldier(i , j , Color.red));            
+            pr = new PanelRules(gamePiecesr);
+        }
+        public void setnewGamePieces(){
+            for(int i=0;i<gamePiecesr.size();i++)
+               gamePiecesr.clear();
+            
+            gamePiecesr.add(new Soldier(4 , 0 , Color.black));
+            gamePiecesr.add(new Soldier(4 , 1 , Color.red));
+            gamePiecesr.add(new Soldier(5 , 2 , Color.red));
+            gamePiecesr.add(new Soldier(3 , 2 , Color.red));
+            gamePiecesr.add(new Soldier(3 , 3 , Color.red));
+            gamePiecesr.add(new Soldier(5 , 3 , Color.red));
+            gamePiecesr.add(new Soldier(4 , 5 , Color.red));
+            gamePiecesr.add(new Soldier(4 , 7 , Color.red));
+//            gamePiecesr.add(new Soldier(5 , 7 , Color.red));
             pr = new PanelRules(gamePiecesr);
         }
         
@@ -202,6 +219,11 @@ public class hexgame
                         for(Soldier sold:captureSoldierPositionAndColor )
                            hexmech.fillcircle(sold.i,sold.j,g2,sold.drawColor ,sold.drawRadius, sold.drawRadius);
                         
+                        
+                        if(conflictListSolve.size()>0){
+                            hexmech.displayConflictMoves(conflictListSolve,g2 , SCRSIZE+100);
+                        }
+                        
 		}
                 @Override
                 public void paint(Graphics g) {
@@ -232,16 +254,18 @@ public class hexgame
 //                            }
 //                        }
                         @Override
-                        public void mouseClicked(MouseEvent e ) {                            
+                        public void mouseClicked(MouseEvent e ) {
+                            possibleConflictMove = false;
+                            conflictListSolve.clear();
                             ArrayList<Point> legalMoves;
                             Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );                            
                             Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
                             Color invcolorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
-                            try {
-                                getLegalMoves(colorTurn);
-                            } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException ex) {
-                                Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
-                            }
+//                            try {
+//                                getLegalMoves(colorTurn);
+//                            } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException ex) {
+//                                Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+//                            }
                             
                             ArrayList<JumpPosition> listOfAllJumps;
                             if(pr.containsSoldier(new Soldier(p.x, p.y, colorTurn) , gamePiecesr) && PanelRules.isValidSquare(p.x, p.y)){
@@ -265,10 +289,16 @@ public class hexgame
                                             //Check for normal jumps
                                             listOfAllJumps.addAll(pr.getJumps(temp,gamePiecesr.get(i).C,true));
                                             
+                                            
+                                            if(containsConflictMoves(listOfAllJumps)){
+                                                possibleConflictMove = true;
+                                                conflictListSolve = listOfAllJumps;
+                                            }
+                                            
                                             //If jumps exist, pass the soldiers jumped to one array, and the
                                             int size = 24;
                                             Random rand = new Random();
-                                            Color c = new Color(rand.nextFloat(),rand.nextFloat(),rand.nextFloat());
+                                            Color c;
                                             for(JumpPosition jp :listOfAllJumps){
                                                 if(jp.jumpPosition.size()== maxJumpCount){
                                                     jumpsExist=true;
@@ -279,7 +309,6 @@ public class hexgame
                                                     for(SearchNode sN:jp.jumpPosition){
                                                         SearchNode from = jp.jumpPosition.get(0);
                                                         if(from.from.x == currentSelection.x && from.from.y == currentSelection.y){
-                                                            //System.out.println("from " + from.from.toString() + " reaches "+reaches.toString() );
                                                             captureSoldierPositionAndColor.add(new Soldier(sN.jumps.x , sN.jumps.y, size, c , reaches , from.from));
                                                             moves.add(reaches);
                                                         }
@@ -318,6 +347,10 @@ public class hexgame
                             }else if( pr.containsSoldier(new Soldier(currentSelection.x, currentSelection.y, colorTurn),gamePiecesr)
                                     && pr.isLegalMove(new Point(p.x, p.y),moves)
                                     && PanelRules.isValidSquare(p.x, p.y)){
+                                    if(possibleConflictMove){
+                                        return;
+                                    }
+                                
                                     for(int i=0;i<gamePiecesr.size();i++){
                                         if(captureSoldierPositionAndColor.size()==0){
                                             if(gamePiecesr.get(i).i==currentSelection.x &&gamePiecesr.get(i).j==currentSelection.y){
@@ -569,5 +602,39 @@ public class hexgame
                 if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j && test.C.equals(gamePiece.get(i).C))
                     return true;
             return false;
+        }
+        public boolean containsConflictMoves(ArrayList<JumpPosition> jp){
+            boolean containsConflict = false;
+            ArrayList<Point> currentSoldiers;
+            
+            for(JumpPosition jP:jp){
+                currentSoldiers = new ArrayList<>();
+                for(int i=0;i<jP.jumpPosition.size();i++){
+                    SearchNode sN = jP.jumpPosition.get(i);
+                    if(!currentSoldiers.contains(sN.jumps) 
+                     &&(sN.jumps.x!=Integer.MAX_VALUE)
+                     &&(sN.jumps.x!=0 &&sN.jumps.y!=0)){
+                        currentSoldiers.add(sN.jumps);                    
+                    }
+                }
+                Point currentTo = jP.jumpPosition.get(jP.jumpPosition.size()-2).to;
+                for(JumpPosition jP2:jp){
+                    if(jP2.jumpPosition.get(jP2.jumpPosition.size()-2).to.equals(currentTo) ){
+                       for(int i=0;i<jP2.jumpPosition.size();i++){
+                            SearchNode sN = jP2.jumpPosition.get(i);
+                            if((sN.jumps.x!=Integer.MAX_VALUE)
+                             &&(sN.jumps.x!=0 &&sN.jumps.y!=0)){
+                               if(!currentSoldiers.contains(sN.jumps))
+                                   containsConflict =true;
+                            }
+                        }
+
+
+                    }
+                } 
+            
+            }
+        
+            return containsConflict;
         }
 }
