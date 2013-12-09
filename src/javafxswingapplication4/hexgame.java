@@ -120,13 +120,11 @@ public class hexgame
         
         
 	class DrawingPanel extends JPanel
-	{	
-            
+	{
             public int deleteX = 0;
             public int deleteY = 0;
             public int drawX   = 0;
             public int drawY   = 0;
-            
                 
 		//mouse variables here
 		//Point mPt = new Point(0,0);
@@ -217,9 +215,22 @@ public class hexgame
                     p = new Point( hexmech.pxtoHex(deleteX,deleteY) );
                     hexmech.fillcircle(p.x,p.y,drawImage,c);
                  }
-
+                
  
 		class MyMouseListener extends MouseAdapter  {	//inner class inside DrawingPanel 
+//                        @Override
+//                        public void mouseEntered(MouseEvent e) {
+//                            try {
+//                                    Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
+//                                    Color invTurn = CurrentTurn==CurrentTurn.BLACK?Color.RED:Color.BLACK;
+//                                    playAMove(colorTurn , getLegalMoves(colorTurn));
+//                                    repaint();
+//                                    playAMove(invTurn, getLegalMoves(invTurn));
+//                                    repaint();
+//                            } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException | NoSuchAlgorithmException ex) {
+//                                Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+//                            }
+//                        }
                         @Override
                         public void mouseClicked(MouseEvent e ) {                            
                             ArrayList<Point> legalMoves;
@@ -501,7 +512,7 @@ public class hexgame
             
             int move = (int)(Math.random()*(getMoves.size()-1));
             
-            //getMoves.get(move).print(true);
+            getMoves.get(move).print(true);
             int index = 0;
             Color oposite = colorTurn.equals(Color.RED)?Color.BLACK:Color.RED;
             while(getMoves.get(move).jumpPosition.get(index).from.x == Integer.MAX_VALUE
