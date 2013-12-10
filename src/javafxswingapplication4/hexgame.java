@@ -136,6 +136,13 @@ public class hexgame
                            }
                             emptyPostCaptureData();
                             updateTurn();
+                            Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.BLACK:Color.RED;
+                            try {
+                                playAMove(colorTurn , getLegalMoves(colorTurn));
+                            } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException | NoSuchAlgorithmException ex) {
+                                Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                            
                          }
                          //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                      }
@@ -428,11 +435,11 @@ public class hexgame
                                              }
                                         }
                                     }
-//                                    try {
-//                                        playAMove(colorTurn , getLegalMoves(colorTurn));
-//                                    } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException | NoSuchAlgorithmException ex) {
-//                                        Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
-//                                    }
+                                    try {
+                                        playAMove(colorTurn , getLegalMoves(colorTurn));
+                                    } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException | NoSuchAlgorithmException ex) {
+                                        Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
                                 }
                             
                             repaint();                        
