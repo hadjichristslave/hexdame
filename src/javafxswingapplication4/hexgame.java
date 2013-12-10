@@ -86,11 +86,10 @@ public class hexgame
 			}
 		}
                 setupGamePieces();
-                setnewGamePieces();
+                //setnewGamePieces();
 	}
 	private void createAndShowGUI(){
  		DrawingPanel panel = new DrawingPanel();
-		//JFrame.setDefaultLookAndFeelDecorated(true);
 		JFrame frame = new JFrame("HexDame v0.5");
 		frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
                 Container content = frame.getContentPane();
@@ -102,6 +101,55 @@ public class hexgame
 		frame.setResizable(false);
 		frame.setLocationRelativeTo( null );
 		frame.setVisible(true);
+                frame.addKeyListener(new KeyListener() {
+
+                     @Override
+                     public void keyTyped(KeyEvent e) {
+                         //System.out.println("adfafadfda------>" + e.getKeyChar());
+                         if(Integer.parseInt(Character.toString(e.getKeyChar()))<conflictListSolve.size()){
+                            try
+                            {
+                                JumpPosition jPP;
+                                jPP = conflictListSolve.get(Integer.parseInt(Character.toString(e.getKeyChar()) ));
+                                for(int i=0;i<gamePiecesr.size();i++){
+                                    Soldier p = gamePiecesr.get(i);
+                                    for(SearchNode sn: jPP.jumpPosition){
+                                        if(p.i ==sn.jumps.x && p.j == sn.jumps.y){
+                                            gamePiecesr.remove(i);
+                                            i--;
+                                        }
+                                    }
+                                    if(p.i == jPP.jumpPosition.get(0).from.x
+                                    && p.j == jPP.jumpPosition.get(0).from.y){
+                                        int toIndex = jPP.jumpPosition.size()-1;
+                                        while(jPP.jumpPosition.get(toIndex).from.x==Integer.MAX_VALUE){
+                                            toIndex--;
+                                        }
+                                        System.out.println("got in here my index is " + toIndex);
+                                        p.i = jPP.jumpPosition.get(toIndex).to.x;
+                                        p.j = jPP.jumpPosition.get(toIndex).to.y;                                        
+                                    }
+                                }
+                           }catch(Exception et){
+                               et.printStackTrace();
+
+                           }
+                            emptyPostCaptureData();
+                            updateTurn();
+                         }
+                         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                     }
+
+                     @Override
+                     public void keyPressed(KeyEvent e) {
+                         
+                     }
+
+                     @Override
+                     public void keyReleased(KeyEvent e) {
+                         
+                     }
+                 });
 	}
 
     /*
@@ -131,7 +179,7 @@ public class hexgame
             gamePiecesr.add(new Soldier(5 , 3 , Color.red));
             gamePiecesr.add(new Soldier(4 , 5 , Color.red));
             gamePiecesr.add(new Soldier(4 , 7 , Color.red));
-//            gamePiecesr.add(new Soldier(5 , 7 , Color.red));
+            gamePiecesr.add(new Soldier(5 , 7 , Color.red));
             pr = new PanelRules(gamePiecesr);
         }
         
@@ -151,13 +199,6 @@ public class hexgame
 			setBackground(COLOURBACK);
                 	MyMouseListener ml = new MyMouseListener();
 			addMouseListener(ml);
-                        addMouseMotionListener(new MouseMotionAdapter() {
-                            @Override
-                            public void mouseDragged(MouseEvent me) {
-                                //System.out.println(me.getX() + " " + me.getY());
-                            }
-
-                        });
 		}
  
                 @Override
@@ -387,11 +428,11 @@ public class hexgame
                                              }
                                         }
                                     }
-                                    try {
-                                        playAMove(colorTurn , getLegalMoves(colorTurn));
-                                    } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException | NoSuchAlgorithmException ex) {
-                                        Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
-                                    }
+//                                    try {
+//                                        playAMove(colorTurn , getLegalMoves(colorTurn));
+//                                    } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException | NoSuchAlgorithmException ex) {
+//                                        Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+//                                    }
                                 }
                             
                             repaint();                        

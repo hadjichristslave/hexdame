@@ -32,6 +32,7 @@ public class SearchTree{
     final static int[ ][ ] blackKingSquares = {{0,6}, {1,6}, {2,7}, {3,7} ,{4,8}, {5,7} , {6,7}, {7,6} , {8,6}};
     TranspTable tT;
     final int tolerance=2;
+    final int multiCutTolerance =1;
     
     
     public int bestMoveGrading;
@@ -42,6 +43,34 @@ public class SearchTree{
         this.root    = new Node();
         this.root.previous = null;
         tT = new TranspTable();
+    }
+    public boolean isGoodEnough(Color c, ArrayList<Soldier> solListy) throws CloneNotSupportedException{
+        PanelRules pr = new PanelRules(solListy);
+        for(Soldier sl:solListy){
+            ArrayList<JumpPosition> tempJp = new ArrayList<>();
+                if(sl.isKing 
+                && sl.C.equals(Color.red)){
+                    try {
+                        tempJp = new ArrayList<>();
+                        tempJp = pr.kingJumpPositions(new Point(sl.i, sl.j), Color.red, true);
+                        if(tempJp.size()>0)
+                            return true;
+                  } catch (CloneNotSupportedException ex) {
+                      Logger.getLogger(SearchTree.class.getName()).log(Level.SEVERE, null, ex);
+                  }
+                }else if(sl.C.equals(Color.red)
+                      && !sl.isKing){
+                    try {
+                        tempJp = new ArrayList<>();
+                        tempJp = pr.getJumps(new Point(sl.i, sl.j),Color.red,true);
+                        if(tempJp.size()>0)
+                            return true;
+                  } catch (CloneNotSupportedException ex) {
+                      Logger.getLogger(SearchTree.class.getName()).log(Level.SEVERE, null, ex);
+                  }
+                }
+        }
+        return false;
     }
     public int heuristicValue(Color c , ArrayList<Soldier> solListy) throws CloneNotSupportedException{
         Color opositeEvaluation = Color.BLACK;
@@ -83,7 +112,7 @@ public class SearchTree{
                     canBeJumped++;
                     if(possiJumps.get(0).jumpPosition.size()>2){
                         canBeMultiJumped++;
-                        System.out.println("Hypo multi");
+                        //System.out.println("Hypo multi");
                     }
                     
                 }
@@ -94,7 +123,7 @@ public class SearchTree{
                     canBeJumped++;
                      if(possiJumps.get(0).jumpPosition.size()>2){
                         canBeMultiJumped++;
-                        System.out.println("Hypo multi");
+                        //System.out.println("Hypo multi");
                      }
                 }
             }
@@ -194,19 +223,24 @@ public class SearchTree{
         tT.hashTable.clear();
         root.next = null;
         
-        //while(currentTime+5000 >System.currentTimeMillis()){
+        
         int alpha,beta,score;
                 
         long currentTime         = System.currentTimeMillis();
         //System.out.println("benchmarking started at " + currentTime);
-        for(int jk=0;jk<4;jk++){
-            searchNodesNextStep(root, currentSearchColor);
-            sortNodes(root);
+        //int jk=0;
+        for(int jk=0;jk<2;jk++){
+//        while(currentTime+2000 >System.currentTimeMillis()){
+//            searchNodesNextStep(root, currentSearchColor);
+//            sortNodes(root);
+            NextStep myThread = new NextStep(root, currentSearchColor);
+            myThread.nextStep();
             //NegaAlphaBeta(root,jk+2, Integer.MIN_VALUE, Integer.MAX_VALUE);
             alpha = 0;
-            beta = 70;
+            beta = 60;
+            NextAlphaBeta myNextAB = new NextAlphaBeta(root, currentSearchColor);
             
-            score = -NegaAlphaBeta( root.next.get(0),getDepth(root.next.get(0), 0)+1, -beta, -alpha);
+            score = -myNextAB.nextAlphaBeta(root, alpha, beta);
             if(score<0) score = -score;
             if( score < beta ) {
                 for( int i=1;i<root.next.size();i++ ) {
@@ -217,12 +251,13 @@ public class SearchTree{
                 }
                 if( result > score ) score = result;
                 if( result >= beta ) break;
+                    
                 }
             }
-            
             currentSearchColor = toggleColor(currentSearchColor);
             long tempTime = System.currentTimeMillis()-currentTime;
-            //System.out.println(jk + " ply at " + tempTime + " milisecseconds" ); 
+            System.out.println(jk + " ply at " + tempTime + " milisecseconds" ); 
+            //jk++;
         }
         long tempTime  =System.currentTimeMillis()-currentTime;
         //System.out.println("benchmarking end at " + tempTime);
@@ -230,10 +265,6 @@ public class SearchTree{
         bestMovesCalculated = new ArrayList<>();
         //printNodes(root);
         principleVariation(root, true);
-        System.out.println(bestMovesCalculated.size());
-//        for(JumpPosition jP:bestMovesCalculated){
-//            jP.print(true);
-//        }
         return bestMovesCalculated;
         
         
@@ -388,34 +419,66 @@ public class SearchTree{
         int score;
         if(n.next!=null && depth>0){
             score = Integer.MIN_VALUE;
+            
+            /* Multicut part of the nega alpha beta*/
+            int c=0;
             for(int il=0;il<n.next.size();il++){
                 Node sd = n.next.get(il);
+                int value = -NegaAlphaBeta(sd, -beta, -alpha, depth-1);
+                if(Math.abs(value) >= Math.abs(beta)){
+                  c++;
+                  if(c >= multiCutTolerance){
+                    //System.out.println("removing due to multiCut");
+                    while (n.next.size()>il+1)    n.next.remove(il+1);
+                    return beta;
+                  }
+                }
+            }
+            
+            
+            for(int il=0;il<n.next.size();il++){
+                /* Transposition table of nega alpha beta*/
+                Node sd = n.next.get(il);
                 /*Iterate through the hash table first*/
-                
+                /*If we have a winning position, noneed to search any other nodes*/
+                if(sd.value>100){ 
+                    while (sd.next.size()>il+1)    sd.next.remove(il+1);
+                    return sd.value;              
+                }
                 
                 ArrayList<Soldier> fooSold  = new ArrayList<>();
                 for(Soldier p : solList) 
                     fooSold.add((Soldier) p.clone());
                 fooSold = setupSoldiersGivenJumpPosition(solList, sd.jP.jumpPosition);
                 
-                
                 boolean hash_hit = tT.hashTable.containsKey(gethashvalue(fooSold));
-                
                 tableData tD     = tT.hashTable.get(gethashvalue(fooSold));
                 if(hash_hit && tD.depth>getDepth(sd, 0)){
                   switch(tD.valuetype){
                   case LOWER_BOUND:
                      int value = alpha<0?-tD.value:tD.value;
-                    if(alpha<value){
-                       alpha= tD.value<0?-tD.value:tD.value;
-                       System.out.println("alpha modified to " + alpha);
-                    }
+                     if(alpha>0){
+                        if(alpha<value){
+                        alpha= alpha<0?-tD.value:tD.value;
+                        System.out.println("alpha modified to " + alpha);
+                        }
+                     }else if(alpha>value){
+                        alpha= alpha<0?-tD.value:tD.value;
+                        System.out.println("alpha modified to " + alpha);
+                        }
                     break;
                   case UPPER_BOUND:
                     value = beta<0?-tD.value:tD.value;
-                    if(beta>value){
-                        beta=tD.value<0?-tD.value:tD.value;
-                        System.out.println("beta modified to " + beta);
+                    if(beta>0){
+                        if(beta>value){
+                            beta= beta<0?-tD.value:tD.value;
+                            System.out.println("beta modified to " + beta);
+                        }
+                    }else{
+                        if(beta<value){
+                            beta= beta<0?-tD.value:tD.value;
+                            System.out.println("beta modified to " + beta);
+                        }
                     }
                     break;
                   case REAL:
@@ -423,14 +486,15 @@ public class SearchTree{
                     return tD.value;
                       
                   }
-                  if(alpha>=beta){
+                  if(Math.abs(alpha)>=Math.abs(beta)){
+                      System.out.println("removing due to TT");
                       while (n.next.size()>il+1)    n.next.remove(il+1); 
                       return tD.value;
                     }
                 }
                 /*Iterate through the hash table first*/
                 
-                
+                /* Regular nega alpha beta */
                 n.value = -NegaAlphaBeta(sd , depth-1, -beta, -alpha);
                 if(n.value>score) {
                     score = n.value;
@@ -440,7 +504,8 @@ public class SearchTree{
                 }
                 if(n.value<0) n.value = -n.value;
                 
-                if(score>=beta) {
+                if(Math.abs(score)>=Math.abs(beta)) {
+                    System.out.println("removing due to ab");
                     while (n.next.size()>il+1)    n.next.remove(il+1); 
                     break;
                 }
@@ -451,6 +516,14 @@ public class SearchTree{
             Color currentTurn = getDepth(n,0)%2==0?Color.RED:Color.BLACK;
             caseType cT=  TranspTable.caseType.LOWER_BOUND;
             int value =heuristicValue(currentTurn, setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition));
+            boolean goodEnough=false;
+            if(currentTurn.equals(Color.red)){
+                goodEnough = isGoodEnough(Color.red, solList);
+                if(goodEnough)
+                    System.out.println("asdfasdfasdfasdfasdf");
+            }
+            
+            
             int currentDepth = getDepth(n,0);
             
             ArrayList<Soldier> fooSold  = new ArrayList<>();
@@ -460,8 +533,9 @@ public class SearchTree{
             if(value>beta) cT                     = caseType.LOWER_BOUND;
             else if(value<alpha) cT               = caseType.UPPER_BOUND;
             else if(value>beta && value<alpha) cT = caseType.REAL;
-            tableData tD = new tableData(value, cT, currentDepth);
+            tableData tD = new tableData(value, cT, currentDepth , goodEnough);
             tT.hashTable.put(gethashvalue(fooSold),tD);
+            
             
             /* value return as normal */
             return value;
@@ -506,4 +580,42 @@ public class SearchTree{
             for(Node sd: n.next) sortNodes(sd);
         }
     }
+      public class NextStep extends Thread {
+          Node n;
+          Color c;
+          public NextStep(Node n , Color color){
+              this.n = n;
+              this.c = color;
+          }
+        public void run(){
+              try {
+                  searchNodesNextStep(n, c);
+                  sortNodes(n);
+              } catch (CloneNotSupportedException ex) {
+                  Logger.getLogger(SearchTree.class.getName()).log(Level.SEVERE, null, ex);
+              }
+        }
+        public void nextStep(){
+            try {
+                  searchNodesNextStep(n, c);
+                  sortNodes(n);
+              } catch (CloneNotSupportedException ex) {
+                  Logger.getLogger(SearchTree.class.getName()).log(Level.SEVERE, null, ex);
+              }
+        }
+  }
+      public class NextAlphaBeta extends Thread {
+          Node n;
+          Color c;
+          public NextAlphaBeta(Node n , Color color){
+              this.n = n;
+              this.c = color;
+          }
+        public int nextAlphaBeta(Node n , int alpha, int beta) throws CloneNotSupportedException, NoSuchAlgorithmException{
+            return NegaAlphaBeta( n.next.get(0),getDepth(n.next.get(0), 0)+1, -beta, -alpha);
+        }
+        public int nextAlphaBeta(Node n , int alpha, int beta , int position) throws CloneNotSupportedException, NoSuchAlgorithmException{
+            return NegaAlphaBeta( n.next.get(position),getDepth(n.next.get(position), 0)+1, -beta, -alpha);
+        }
+  }
 }

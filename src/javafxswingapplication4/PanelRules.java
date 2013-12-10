@@ -299,27 +299,30 @@ public class PanelRules {
             //Take the last position of the movement as current point
              Point foo = jumpPosit.jumpPosition.get(jumpPosit.jumpPosition.size()-1).to;
              Color oposite  = c==Color.black?Color.red:Color.black;
-             Point currentPoint = foo;
-             Point soldierPoint , nextPoint;
              
-             for(int i=0;i<8;i++){
-                if(i!=0) currentPoint = getXandYgivenOrientation(currentPoint, or,m);
-                if( !isValidSquare(currentPoint.x, currentPoint.y)) break;
-                if( !isEmpty(new Soldier(currentPoint.x, currentPoint.y, Color.white), gamePieces)) break;
-                soldierPoint         = getXandYgivenOrientation(currentPoint, or,m);
-                for(OrientationMove orM:orientationMoveCombs){
-                    soldierPoint         = getXandYgivenOrientation(currentPoint, orM.or,orM.m);
-                    nextPoint            = getXandYgivenOrientation(soldierPoint, orM.or,orM.m);
-                    Soldier foe          = new Soldier(soldierPoint.x, soldierPoint.y, oposite);
-                    if(isJumpable(soldierPoint, orM.or, orM.m, c , jumpPosit))
-                        addAllRelevantSquares(jumpPosit,  foo, nextPoint, soldierPoint, orM.or, orM.m ,oposite );
+             Point soldierPoint , nextPoint;
+             for(OrientationMove orM:orientationMoveCombs){
+                Point currentPoint = foo;
+                for(int i=0;i<8;i++){
+                   if(i!=0) currentPoint = getXandYgivenOrientation(currentPoint, orM.or,orM.m);
+                   if( !isValidSquare(currentPoint.x, currentPoint.y)) 
+                       break;
+                   if( !isEmpty(new Soldier(currentPoint.x, currentPoint.y, Color.white), gamePieces)) 
+                       break;
+                   //soldierPoint         = getXandYgivenOrientation(currentPoint, or,m);
 
-                }
-                nextPoint = getXandYgivenOrientation(soldierPoint, or,m);
-                if(!isEmpty(soldierPoint, gamePieces, jumpPosit.jumpPosition)
-                  &&!isEmpty(nextPoint, gamePieces, jumpPosit.jumpPosition)) break;
-                
-            }
+                       soldierPoint         = getXandYgivenOrientation(currentPoint, orM.or,orM.m);
+                       nextPoint            = getXandYgivenOrientation(soldierPoint, orM.or,orM.m);
+                       Soldier foe          = new Soldier(soldierPoint.x, soldierPoint.y, oposite);
+                       if(isJumpable(soldierPoint, orM.or, orM.m, c , jumpPosit))
+                           addAllRelevantSquares(jumpPosit,  foo, nextPoint, soldierPoint, orM.or, orM.m ,oposite );
+
+
+                   nextPoint = getXandYgivenOrientation(soldierPoint, or,m);
+                   if(!isEmpty(soldierPoint, gamePieces, jumpPosit.jumpPosition)
+                     &&!isEmpty(nextPoint, gamePieces, jumpPosit.jumpPosition)) break; 
+               }
+             }
                 
                  
                 
@@ -347,7 +350,9 @@ public class PanelRules {
                     int removeIndex = getFirstAvailableIndex();
                     int currentSize = tempSearchNode.size();
                      // Make a new DFS with the path as input
-                    getKingJumpPos(kingPoint,jumpPositions.or, jumpPositions.m, jumpPositions,c,false);
+//                    getKingJumpPos(kingPoint,jumpPositions.or, jumpPositions.m, jumpPositions,c,false);
+                    for(OrientationMove orM :orientationMoveCombs)
+                        getKingJumpPos(kingPoint,jumpPositions.or, jumpPositions.m, jumpPositions,c,false);
                     
                     //Check if the size of the search tree has gotten bigger
                     if(currentSize == tempSearchNode.size()){

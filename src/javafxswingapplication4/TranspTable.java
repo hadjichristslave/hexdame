@@ -14,6 +14,7 @@ import java.util.HashMap;
 public class TranspTable {
     HashMap<String , tableData> hashTable;
     public enum caseType {LOWER_BOUND, UPPER_BOUND, REAL};
+    public boolean goodEnough;
     public TranspTable() {
         this.hashTable = new HashMap<>();
     }
