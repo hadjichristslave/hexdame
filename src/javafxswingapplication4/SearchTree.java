@@ -26,14 +26,16 @@ public class SearchTree{
     private ArrayList<Soldier> solList;
     Node root;
     final static int[ ][ ] sideSquares = {{0,2},{8,2},{0,6},{8,6},{0,3},{0,4},{0,5},{8,3},{8,4},{8,5} };
-    final static int[ ][ ] centerSquares = {{1,3} , {2,4} , {3,3} , {4,4},{5,3} , {6,4} , {7,3},
-                                            {1,4} , {2,5} , {3,4} , {4,5},{5,4} , {6,5} , {7,4}};
+    final static int[ ][ ] centerSquares = { {2,4} , {3,3} , {4,4},{5,3} , {6,4},
+                                             {2,5} , {3,4} , {4,5},{5,4} , {6,5}};
     final static int[ ][ ] redKingSquares = {{0,2},{1,1}, {2,1}, {3,0} ,{4,0}, {5,0} , {6,1}, {7,1} ,{8,2}};
     final static int[ ][ ] blackKingSquares = {{0,6}, {1,6}, {2,7}, {3,7} ,{4,8}, {5,7} , {6,7}, {7,6} , {8,6}};
     final static int[][] kingSquares = redKingSquares;
     TranspTable tT;
     final int tolerance=3;
     final int multiCutTolerance =1;
+    long currentTime;
+    int timeLimit = 20000;
     
     
     public int bestMoveGrading;
@@ -47,132 +49,81 @@ public class SearchTree{
     }
     public boolean isGoodEnough(Color c, ArrayList<Soldier> solListy) throws CloneNotSupportedException{
         PanelRules pr = new PanelRules(solListy);
+        ArrayList<JumpPosition> tempJp;
         for(Soldier sl:solListy){
-            ArrayList<JumpPosition> tempJp = new ArrayList<>();
-                if(sl.isKing 
-                && sl.C.equals(Color.red)){
-                    try {
-                        tempJp = new ArrayList<>();
-                        tempJp = pr.kingJumpPositions(new Point(sl.i, sl.j), Color.red, true);
-                        if(tempJp.size()>0)
-                            return true;
-                  } catch (CloneNotSupportedException ex) {
-                      Logger.getLogger(SearchTree.class.getName()).log(Level.SEVERE, null, ex);
-                  }
-                }else if(sl.C.equals(Color.red)
-                      && !sl.isKing){
-                    try {
-                        tempJp = new ArrayList<>();
-                        tempJp = pr.getJumps(new Point(sl.i, sl.j),Color.red,true);
-                        if(tempJp.size()>0)
-                            return true;
-                  } catch (CloneNotSupportedException ex) {
-                      Logger.getLogger(SearchTree.class.getName()).log(Level.SEVERE, null, ex);
-                  }
-                }
+            if(sl.C.equals(Color.BLACK)) continue;            
+            if(sl.isKing){
+                tempJp = pr.kingJumpPositions(new Point(sl.i, sl.j), Color.red, true);
+                if(tempJp.size()>0)
+                    return true;
+            }else if(!sl.isKing){  
+                tempJp = pr.getJumps(new Point(sl.i, sl.j),Color.red,true);
+                if(tempJp.size()>0)
+                    return true;
+            }
         }
         return false;
+    }
+    public boolean isZugZwag(ArrayList<Soldier> solListy , int nodeVal) throws CloneNotSupportedException{
+        PanelRules pr = new PanelRules(solListy);
+        ArrayList<JumpPosition> tempJp = pr.getLegalMoves(Color.black,solListy);
+        ArrayList<Soldier> fooSold;
+        int moveSize = 0;
+        for(JumpPosition jp:tempJp){
+            fooSold = setupSoldiersGivenJumpPosition(solList, jp.jumpPosition);
+            if( heuristicValue(Color.BLACK, fooSold)>nodeVal)
+                moveSize++;
+            
+        }
+        return moveSize==(tempJp.size()-1);
     }
     public int heuristicValue(Color c , ArrayList<Soldier> solListy) throws CloneNotSupportedException{
         Color opositeEvaluation = Color.BLACK;
         Color colorEvaluated = Color.RED;
         int heuristicVal = 0;
-        /*
-         * No oposite soldiers, game is won
-         */
-        int soldierCount = 0;
-        for(Soldier sl:solListy)
-            if(sl.C.equals(opositeEvaluation))
-                soldierCount++;
-        heuristicVal +=soldierCount==0?100:0;
-        
+        int soldierCount = 0;        
         int canBeJumped = 0;
         int canBeMultiJumped = 0;
-        for(Soldier sl:solListy){
-            PanelRules pr = new PanelRules(solListy);
-                
+        for(Soldier sl:solListy){ 
+            if(sl.C.equals(opositeEvaluation))    soldierCount++;
             heuristicVal+=  sl.C.equals(colorEvaluated)?(sl.isKing?6:3):0;
             heuristicVal+= (sl.C.equals(colorEvaluated) && is(sl.i, sl.j , sideSquares))?2:0;
             heuristicVal+= (sl.C.equals(colorEvaluated) && is(sl.i, sl.j , centerSquares))?2:0;
-            heuristicVal+= (sl.C.equals(colorEvaluated) && is(sl.i, sl.j , kingSquares))?4:0;
-             /*
+            heuristicVal+= (sl.C.equals(colorEvaluated) && is(sl.i, sl.j , kingSquares))?4:0;             
+            /*
               * When black is playing, count if pieces can be captured.
               * if they can't,it's a better position for red soldiers
               */
-            ArrayList<JumpPosition> possiJumps = pr.getJumps(new Point(sl.i, sl.j), opositeEvaluation, true);
+            PanelRules pr = new PanelRules(solListy);
             if(c.equals(opositeEvaluation)){
-                if(sl.C.equals(opositeEvaluation)
-                && !sl.isKing
-                && possiJumps.size()>0){
+                ArrayList<JumpPosition> possiJumps = pr.getJumps(new Point(sl.i, sl.j), opositeEvaluation, true);
+                if(sl.C.equals(opositeEvaluation)&& !sl.isKing && possiJumps.size()>0){
                     canBeJumped++;
-                    if(possiJumps.get(0).jumpPosition.size()>2){
+                    if(possiJumps.get(0).jumpPosition.size()>2)
                         canBeMultiJumped++;
-                        //System.out.println("Hypo multi");
-                    }
-                    
+                    if(possiJumps.get(0).jumpPosition.size()>4)
+                        return 1;
                 }
                 possiJumps = pr.kingJumpPositions(new Point(sl.i, sl.j), opositeEvaluation, true);
-                if( sl.C.equals(opositeEvaluation)
-                && sl.isKing
-                && pr.kingJumpPositions(new Point(sl.i, sl.j), opositeEvaluation, true).size()>0){
+                if( sl.C.equals(opositeEvaluation)&& sl.isKing&& possiJumps.size()>0){
                     canBeJumped++;
-                     if(possiJumps.get(0).jumpPosition.size()>2){
+                     if(possiJumps.get(0).jumpPosition.size()>2)
                         canBeMultiJumped++;
-                        //System.out.println("Hypo multi");
-                     }
+                     if(possiJumps.get(0).jumpPosition.size()>4)
+                        return 1;
                 }
+            }else{
+                ArrayList<JumpPosition> tempJp;
+                if(sl.isKing && sl.C.equals(colorEvaluated)&& c.equals(sl.C)){
+                    tempJp =  pr.kingJumpPositions(new Point(sl.i, sl.j), colorEvaluated, true);
+                    heuristicVal += tempJp.size()>0?(tempJp.size()>3?5:3):0;
+                }else if(sl.C.equals(colorEvaluated)&& c.equals(colorEvaluated)&& !sl.isKing){
+                    tempJp = pr.getJumps(new Point(sl.i, sl.j),colorEvaluated,true);
+                    heuristicVal += tempJp.size()>0?(tempJp.size()>3?4:2):0;              
+                 }
             }
-            ArrayList<JumpPosition> tempJp = new ArrayList<>();
-                if(sl.isKing 
-                && sl.C.equals(colorEvaluated)
-                && c.equals(sl.C)){
-                    try {
-                        tempJp =  pr.kingJumpPositions(new Point(sl.i, sl.j), colorEvaluated, true);
-                        heuristicVal += tempJp.size()>0?(tempJp.size()>3?4:2):0;
-//                        if(tempJp.size()>0){
-                            //System.out.println("our king jumps colro " + sl.C.toString());
-//                            JumpPosition jP = tempJp.get(0);                            
-//                            ArrayList<Soldier> fooSold = setupSoldiersGivenJumpPosition(solList, jP.jumpPosition);
-//                            boolean opponentRetaliates = false;
-//                            for(Soldier foosl:fooSold){
-//                                if(foosl.C.equals(opositeEvaluation)
-//                                && (pr.kingJumpPositions(new Point(foosl.i, foosl.j), c, true).size()>0
-//                                || pr.getJumps(new Point(foosl.i, foosl.j), c, true).size()>0) ){
-//                                    opponentRetaliates = true;
-//                                }
-//                            }
-//                            if(!opponentRetaliates) heuristicVal +=4;                     
-//                      }
-                  } catch (CloneNotSupportedException ex) {
-                      Logger.getLogger(SearchTree.class.getName()).log(Level.SEVERE, null, ex);
-                  }
-                }else if(sl.C.equals(colorEvaluated)
-                      && c.equals(colorEvaluated)
-                      && !sl.isKing){
-                    try {
-                        tempJp = pr.getJumps(new Point(sl.i, sl.j),colorEvaluated,true);
-                        heuristicVal += tempJp.size()>0?(tempJp.size()>3?3:1):0;
-//                        if(tempJp.size()>0){
-//                            heuristicVal = heuristicVal+1;
-//                            if(tempJp.size()>3)
-//                                heuristicVal+=2;
-////                            JumpPosition jP = tempJp.get(0);
-//                            ArrayList<Soldier> fooSold = setupSoldiersGivenJumpPosition(solList, jP.jumpPosition);
-//                            boolean opponentRetaliates = false;
-//                            for(Soldier foosl:fooSold){
-//                                if(foosl.C.equals(opositeEvaluation)
-//                                && (pr.kingJumpPositions(new Point(foosl.i, foosl.j), c, true).size()>0
-//                                || pr.getJumps(new Point(foosl.i, foosl.j), c, true).size()>0) ){
-//                                    opponentRetaliates = true;
-//                                }
-//                            }
-//                            if(!opponentRetaliates) heuristicVal +=4; 
-//                      }
-                  } catch (CloneNotSupportedException ex) {
-                      Logger.getLogger(SearchTree.class.getName()).log(Level.SEVERE, null, ex);
-                  }
-                }
         }
+        heuristicVal += soldierCount==0?100:0;
         heuristicVal += (canBeJumped==0)?3:0;
         heuristicVal += (!(canBeJumped==0)&&(heuristicVal>3))?-3:0;
         heuristicVal += (canBeMultiJumped==0)?6:0;
@@ -183,7 +134,7 @@ public class SearchTree{
         for(int i=0;i<squareArray.length;i++)
             if(x==squareArray[i][0] && y==squareArray[i][1])
                 return true;
-        return false;    
+        return false;
     }
     public static boolean isSideSquare(int x, int y , int[][] squareArray){
         for(int i=0;i<squareArray.length;i++)
@@ -207,31 +158,29 @@ public class SearchTree{
             jPList , Color c)  throws CloneNotSupportedException, NoSuchAlgorithmException{
         Color currentSearchColor = c;
         root.next = null;
-        
-        
         int alpha,beta,score;
-                
-        long currentTime         = System.currentTimeMillis();
+        
+        currentTime         = System.currentTimeMillis();
         //System.out.println("benchmarking started at " + currentTime);
         //int jk=0;
-        for(int jk=0;jk<3;jk++){
-//        while(currentTime+2000 >System.currentTimeMillis()){
-
+//        for(int jk=0;jk<5;jk++){
+        while(currentTime+10000 >System.currentTimeMillis()){
+            System.out.println("----------------");
+            tT.hashTable.clear();
             long curTime = System.currentTimeMillis();
             System.out.println(" benchmarking next moves");
             searchNodesNextStep(root, currentSearchColor);
             sortNodes(root);
             long benchtime = System.currentTimeMillis()- curTime;
-            System.out.println(" benchmarking next moves end at " + benchtime + " ms");
-            sortNodes(root);
+            System.out.println(" benchmarking next moves end at " + benchtime + " ms for color  "+currentSearchColor.toString());
             //NegaAlphaBeta(root,jk+2, Integer.MIN_VALUE, Integer.MAX_VALUE);
             alpha = 10;
-            beta = 60;
+            beta = 70;
             
             
             NextAlphaBeta myNextAB = new NextAlphaBeta(root, currentSearchColor);
             curTime = System.currentTimeMillis();
-            System.out.println(" benchmarking first alphaBeta");
+            System.out.println(" benchmarking first alphaBeta ");
             score = -myNextAB.nextAlphaBeta(root, alpha, beta);
             benchtime = System.currentTimeMillis()- curTime;
             System.out.println(" benchmarking first alphabeta end at " + benchtime + " ms");
@@ -256,7 +205,7 @@ public class SearchTree{
             
             currentSearchColor = toggleColor(currentSearchColor);
             long tempTime = System.currentTimeMillis()-currentTime;
-            System.out.println(jk + " ply at " + tempTime + " milisecseconds" ); 
+            
             //jk++;
         }
         long tempTime  =System.currentTimeMillis()-currentTime;
@@ -303,21 +252,19 @@ public class SearchTree{
         ArrayList<Soldier> fooSold  = new ArrayList<>();
         for(Soldier p : solList) 
             fooSold.add((Soldier) p.clone());
-        ArrayList<SearchNode> jPList = (ArrayList<SearchNode>) jP.clone();
         
-        for(int j = 0;j<jPList.size();j++){
-                    SearchNode sN = jPList.get(j);
+        for(int j = 0;j<jP.size();j++){
+                    SearchNode sN = jP.get(j);
                     for(Iterator<Soldier> soldier = fooSold.iterator(); soldier.hasNext();){
                         Soldier fooSol = soldier.next();
                         if ( fooSol.i == sN.from.x && fooSol.j ==sN.from.y){
                                 fooSol.i =  sN.to.x;
                                 fooSol.j =  sN.to.y;
                                 if(PanelRules.isKingSquare(fooSol.i, fooSol.j, fooSol.C)){
-                                    if(j+1==jPList.size())
-                                        fooSol.isKing = true;                                    
-                                    else if(j+1<jPList.size())
-                                        if((jPList.get(j+1).from.x!=sN.to.x)&&(jPList.get(j+1).from.y!=sN.to.y))
-                                            fooSol.isKing = true;
+                                    if(j+1==jP.size() 
+                                     ||(j+1<jP.size() && ((jP.get(j+1).from.x!=sN.to.x)&&(jP.get(j+1).from.y!=sN.to.y))) 
+                                            )
+                                        fooSol.isKing = true;
                                     
                                 }
                             }
@@ -327,18 +274,34 @@ public class SearchTree{
                 }
         return fooSold;
     }
-    public void searchNodesNextStep(Node n, Color c) throws CloneNotSupportedException{
+    public boolean searchNodesNextStep(Node n, Color c) throws CloneNotSupportedException{
+        long ourtime = System.currentTimeMillis()-currentTime;
+        if( ourtime>timeLimit){
+            System.out.println("returning due to time restrictions");
+            return false;
+        }
+            
             if(n.next!=null)
                 for(Node sd: n.next)
                     searchNodesNextStep(sd , c); 
             else{
+                
                 ArrayList<Soldier> fooSold = setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition);                
-                Color oposite = c.equals(Color.RED)?Color.BLACK:Color.RED;
+                Color currentTurn = getDepth(n,0)%2==0?Color.RED:Color.BLACK;
+                //Color oposite = c.equals(Color.RED)?Color.BLACK:Color.RED;
                 PanelRules pr = new PanelRules(fooSold);
-                ArrayList<JumpPosition> NextNodes = pr.getLegalMoves(oposite, fooSold);                
+                ArrayList<JumpPosition> NextNodes = pr.getLegalMoves(currentTurn, fooSold);                
                 n.next = new ArrayList<>();
                 int max =0;
+                int maxJump = 0;
+                
+                for(JumpPosition jP: NextNodes){
+                    if( maxJump< jP.jumpPosition.size())
+                        maxJump = jP.jumpPosition.size();
+                }
+                
                 for(JumpPosition nextNode: NextNodes){      
+                    if(nextNode.jumpPosition.size()< maxJump) continue;
                     nextNode.jumpPosition.addAll(0 , n.jP.jumpPosition);
                     SearchNode sNn = new SearchNode(new Point(Integer.MAX_VALUE,
                             Integer.MAX_VALUE),new Point(Integer.MAX_VALUE,Integer.MAX_VALUE),
@@ -348,18 +311,18 @@ public class SearchTree{
                     /*Create the soldier position for the evaluation function*/
                     ArrayList<Soldier> tempSoldAr  = setupSoldiersGivenJumpPosition(solList, nextNode.jumpPosition);
                     Node newNode =  new Node(nextNode, n);
+                    
                     /*Oposite turn assignment as values are to be passed on the next node*/
-                    Color currentTurn = getDepth(n,0)%2==0?Color.BLACK:Color.RED;
-                    newNode.value = heuristicValue(currentTurn, tempSoldAr);
+                    currentTurn = getDepth(n,0)%2==0?Color.BLACK:Color.RED;
+                    newNode.value = heuristicValue(currentTurn, tempSoldAr);                    
                     max = max<newNode.value? newNode.value:max;
                     newNode.previous = n;
                     if(newNode.value >= max)
                         n.next.add(newNode);
                     
-                }
-                
+                }                
             }
-    
+            return false;
     }
     public void getBestMoveGrading(Node n){
         if(n.next!=null)    for(Node sd: n.next) getBestMoveGrading(sd);
@@ -489,18 +452,22 @@ public class SearchTree{
             boolean goodEnough=false;            
             if(currentTurn.equals(Color.red)){
                 if(isGoodEnough(Color.red, setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition))){                    
-                    searchNodesNextStep(n, Color.black);
+                    searchNodesNextStep(n, Color.BLACK);
                     sortNodes(n);
+                    System.out.println("Forward searching one more ply red");
+                }
+            }else{
+                if(isZugZwag(setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition) , n.value)){                    
+                    searchNodesNextStep(n, Color.RED);
+                    sortNodes(n);
+                    System.out.println("Good enough added one more ply black");
                 }
             }
             
             
             int currentDepth = getDepth(n,0);
             
-            ArrayList<Soldier> fooSold  = new ArrayList<>();
-            for(Soldier p : solList) 
-                fooSold.add((Soldier) p.clone());
-            fooSold = setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition);
+            ArrayList<Soldier> fooSold            = setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition);
             if(value>beta) cT                     = caseType.LOWER_BOUND;
             else if(value<alpha) cT               = caseType.UPPER_BOUND;
             else if(value>beta && value<alpha) cT = caseType.REAL;
@@ -529,7 +496,6 @@ public class SearchTree{
         byte[] digest = m.digest();
         BigInteger bigInt = new BigInteger(1,digest);
         String hashtext = bigInt.toString(16);
-        
         return hashtext;
     }
     public int getDepth(Node n , int counter){
