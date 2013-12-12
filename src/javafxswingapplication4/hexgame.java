@@ -86,7 +86,7 @@ public class hexgame
 			}
 		}
                 setupGamePieces();
-                //setnewGamePieces();
+                //playFirst();
 	}
 	private void createAndShowGUI(){
  		DrawingPanel panel = new DrawingPanel();
@@ -174,19 +174,15 @@ public class hexgame
                         gamePiecesr.add(new Soldier(i , j , Color.red));            
             pr = new PanelRules(gamePiecesr);
         }
-        public void setnewGamePieces(){
-            for(int i=0;i<gamePiecesr.size();i++)
-               gamePiecesr.clear();
+        public void playFirst(){
+            Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
             
-            gamePiecesr.add(new Soldier(4 , 0 , Color.black));
-            gamePiecesr.add(new Soldier(4 , 1 , Color.red));
-            gamePiecesr.add(new Soldier(5 , 2 , Color.red));
-            gamePiecesr.add(new Soldier(3 , 2 , Color.red));
-            gamePiecesr.add(new Soldier(3 , 3 , Color.red));
-            gamePiecesr.add(new Soldier(5 , 3 , Color.red));
-            gamePiecesr.add(new Soldier(4 , 5 , Color.red));
-            gamePiecesr.add(new Soldier(4 , 7 , Color.red));
-            gamePiecesr.add(new Soldier(5 , 7 , Color.red));
+            updateTurn();
+            try {
+                    playAMove(colorTurn , getLegalMoves(colorTurn));
+                } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException | NoSuchAlgorithmException ex) {
+                    Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+                }
             pr = new PanelRules(gamePiecesr);
         }
         
