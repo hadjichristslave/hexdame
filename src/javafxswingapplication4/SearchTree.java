@@ -22,19 +22,17 @@ public class SearchTree{
 
     private ArrayList<Soldier> solList;
     Node root;
-    final static int[ ][ ] sideSquares = {{0,2},{8,2},{0,6},{8,6},{0,3},{0,5},{8,3},{8,5} };
-    final static int[ ][ ] centerSquares = { {2,4} , {3,3} , {4,4},{5,3} , {6,4},
-                                             {2,5} , {3,4} , {4,5},{5,4} , {6,5}};
+    final static int[ ][ ] sideSquares = {{0,6},{8,6}};
+    final static int[ ][ ] centerSquares = {{4,4}};
     final static int[ ][ ] redKingSquares = {{0,2},{1,1}, {2,1}, {3,0} ,{4,0}, {5,0} , {6,1}, {7,1} ,{8,2}};
     final static int[ ][ ] blackKingSquares = {{0,6}, {1,6}, {2,7}, {3,7} ,{4,8}, {5,7} , {6,7}, {7,6} , {8,6}};
     final static int[][] kingSquares = redKingSquares;
     TranspTable tT;
-    final int tolerance=3;
-    final int multiCutTolerance =2;
+    final int tolerance=0;
+    final int multiCutTolerance =1;
     long currentTime;
-    int timeLimit = 9000;
-    
-    
+    int timeLimit = 15000;
+    public int score =0;
     public int bestMoveGrading;
     public JumpPosition principleVariation;
     public ArrayList<JumpPosition> bestMovesCalculated;
@@ -62,18 +60,18 @@ public class SearchTree{
         }
         return false;
     }
-    public boolean isZugZwag(ArrayList<Soldier> solListy , int nodeVal) throws CloneNotSupportedException{
+    public boolean checkNullMove(ArrayList<Soldier> solListy , int nodeVal) throws CloneNotSupportedException{
         PanelRules pr = new PanelRules(solListy);
         ArrayList<JumpPosition> tempJp = pr.getLegalMoves(Color.black,solListy);
         ArrayList<Soldier> fooSold;
         int moveSize = 0;
         for(JumpPosition jp:tempJp){
             fooSold = setupSoldiersGivenJumpPosition(solList, jp.jumpPosition);
-            if( heuristicValue(Color.BLACK, fooSold)>nodeVal)
+            if( heuristicValue(Color.RED, fooSold)>nodeVal)
                 moveSize++;
             
         }
-        return moveSize==(tempJp.size()-1);
+        return moveSize>=(tempJp.size()-2);
     }
     public boolean tryNullMove(ArrayList<Soldier> solListy , int nodeVal) throws CloneNotSupportedException{
         PanelRules pr = new PanelRules(solListy);
@@ -88,104 +86,92 @@ public class SearchTree{
         }
         return moveSize==(tempJp.size()-1);
     }
-    public int heuristicValue(Color c , ArrayList<Soldier> solListy) throws CloneNotSupportedException{
+   public int heuristicValue(Color c , ArrayList<Soldier> solListy) throws CloneNotSupportedException{
+       
         Color opositeEvaluation = Color.BLACK;
         Color colorEvaluated = Color.RED;
         int heuristicVal = 0;
         int soldierCount = 0;        
+        int oursoldierCount = 0;        
         int canBeJumped = 0;
         int canBeMultiJumped = 0;
+        boolean canbeRetaliated = false;
         for(Soldier sl:solListy){ 
             if(sl.C.equals(opositeEvaluation))    soldierCount++;
-            heuristicVal+=  sl.C.equals(colorEvaluated)?(sl.isKing?6:2):0;
-            heuristicVal+= (sl.C.equals(colorEvaluated) && is(sl.i, sl.j , sideSquares))?2:0;
-            heuristicVal+= (sl.C.equals(colorEvaluated) && is(sl.i, sl.j , centerSquares))?2:0;
-            heuristicVal+= (sl.C.equals(colorEvaluated) && is(sl.i, sl.j , kingSquares))?4:0;             
+            else oursoldierCount++;
+            heuristicVal+=  sl.C.equals(colorEvaluated)?(sl.isKing?6:3):0;
+            heuristicVal-=  sl.C.equals(opositeEvaluation)?(sl.isKing?6:3):0;
+            heuristicVal+=  sl.C.equals(colorEvaluated)&&is(sl.i, sl.j , sideSquares)?2:0;
+            heuristicVal+=  sl.C.equals(colorEvaluated) && is(sl.i, sl.j , centerSquares)?2:0;
+            heuristicVal+=  sl.C.equals(colorEvaluated) && is(sl.i, sl.j , kingSquares)?6:0;             
             /*
               * When black is playing, count if pieces can be captured.
               * if they can't,it's a better position for red soldiers
               */
             PanelRules pr = new PanelRules(solListy);
+            ArrayList<JumpPosition> myMoves = pr.getLegalMoves(colorEvaluated, solList);
+            ArrayList<JumpPosition> opMoves = pr.getLegalMoves(opositeEvaluation, solList);
+            int opjumps;
+            opjumps = pr.getJumps(new Point(sl.i,sl.j),opositeEvaluation, true).size()+
+            pr.kingJumpPositions(new Point(sl.i,sl.j),opositeEvaluation, true).size();
+//            if(myMoves.size()> opMoves.size() && opjumps==0)
+//                heuristicVal+=myMoves.size()-opMoves.size();
+//            else if(opjumps==0)
+//                heuristicVal-=opMoves.size()-myMoves.size();
+            
             if(c.equals(opositeEvaluation)){
+                heuristicVal-=  sl.C.equals(opositeEvaluation) && is(sl.i, sl.j , blackKingSquares)?1:0;
                 ArrayList<JumpPosition> possiJumps = pr.getJumps(new Point(sl.i, sl.j), opositeEvaluation, true);
                 if(sl.C.equals(opositeEvaluation)&& !sl.isKing && possiJumps.size()>0){
-                    canBeJumped++;
-                    if(possiJumps.get(0).jumpPosition.size()>2)
-                        canBeMultiJumped++;
-                    if(possiJumps.get(0).jumpPosition.size()>4)
-                        return 1;
+                    heuristicVal -=4;
+                    if(possiJumps.get(0).jumpPosition.size()>3)
+                        heuristicVal -=8;
                 }
                 possiJumps = pr.kingJumpPositions(new Point(sl.i, sl.j), opositeEvaluation, true);
                 if( sl.C.equals(opositeEvaluation)&& sl.isKing&& possiJumps.size()>0){
-                    canBeJumped++;
+                    heuristicVal -=5;
                      if(possiJumps.get(0).jumpPosition.size()>2)
-                        canBeMultiJumped++;
-                     if(possiJumps.get(0).jumpPosition.size()>4)
-                        return 1;
+                        heuristicVal -=8;
                 }
             }else{
                 ArrayList<JumpPosition> tempJp;
                 if(sl.isKing && sl.C.equals(colorEvaluated)&& c.equals(sl.C)){
                     tempJp =  pr.kingJumpPositions(new Point(sl.i, sl.j), colorEvaluated, true);
-                    heuristicVal += tempJp.size()>0?(tempJp.size()>3?5:3):0;
+                    heuristicVal += tempJp.size()>0?(tempJp.size()>3?2:5):0;
                     if(tempJp.size()>0){
-                        boolean canbeRetaliated = false;
                         JumpPosition jP = tempJp.get(0);
                         ArrayList<Soldier> fooSold = setupSoldiersGivenJumpPosition(solList, jP.jumpPosition);
                         for(Soldier foosl:fooSold){
                             if(foosl.C.equals(opositeEvaluation)
-                            && !(pr.kingJumpPositions(new Point(foosl.i, foosl.j), c, true).size()>0
-                            || pr.getJumps(new Point(foosl.i, foosl.j), c, true).size()>0) ){
-                                heuristicVal = heuristicVal+2;
-                                for(JumpPosition jPz: tempJp){
-                                    ArrayList<Soldier> fooSold3 = setupSoldiersGivenJumpPosition(solList, jPz.jumpPosition);
-                                    for(Soldier foosl3:fooSold3){
-                                        if(foosl3.C.equals(opositeEvaluation)
-                                        && (pr.kingJumpPositions(new Point(foosl3.i, foosl3.j), c, true).size()>0
-                                        || pr.getJumps(new Point(foosl3.i, foosl3.j), c, true).size()>0) ){
-                                             canbeRetaliated = true;
-                                         }
-                                    }
-                                }
+                            && !(pr.kingJumpPositions(new Point(foosl.i, foosl.j), opositeEvaluation, true).size()>0
+                            || pr.getJumps(new Point(foosl.i, foosl.j), opositeEvaluation, true).size()>0) ){
+                                heuristicVal = heuristicVal-5;
+                                break;
                             }
                         }
-                        heuristicVal += !canbeRetaliated?3:0;
                     }
                     
                 }else if(sl.C.equals(colorEvaluated)&& c.equals(colorEvaluated)&& !sl.isKing){
                     tempJp = pr.getJumps(new Point(sl.i, sl.j),colorEvaluated,true);
-                    heuristicVal += tempJp.size()>0?(tempJp.size()>3?5:3):0;
+                    heuristicVal += tempJp.size()>0?(tempJp.size()>3?2:5):0;
                     if(tempJp.size()>0){
-                        boolean canbeRetaliated = false;
                         JumpPosition jP = tempJp.get(0);
                         ArrayList<Soldier> fooSold = setupSoldiersGivenJumpPosition(solList, jP.jumpPosition);
                         for(Soldier foosl:fooSold){
                             if(foosl.C.equals(opositeEvaluation)
                             && !(pr.kingJumpPositions(new Point(foosl.i, foosl.j), c, true).size()>0
                             || pr.getJumps(new Point(foosl.i, foosl.j), c, true).size()>0) ){
-                                heuristicVal = heuristicVal+2;
-                                for(JumpPosition jPz: tempJp){
-                                    ArrayList<Soldier> fooSold3 = setupSoldiersGivenJumpPosition(solList, jPz.jumpPosition);
-                                    for(Soldier foosl3:fooSold3){
-                                        if(foosl3.C.equals(opositeEvaluation)
-                                        && (pr.kingJumpPositions(new Point(foosl3.i, foosl3.j), c, true).size()>0
-                                        || pr.getJumps(new Point(foosl3.i, foosl3.j), c, true).size()>0) ){
-                                             canbeRetaliated = true;
-                                         }
-                                    }
-                                }
+                                heuristicVal = heuristicVal-5;
+                                break;
                             }
                         }
-                        heuristicVal += !canbeRetaliated?3:0;
                     }
                  }
             }
         }
         heuristicVal += soldierCount==0?100:0;
-        heuristicVal += (canBeJumped==0)?3:0;
-        heuristicVal += (!(canBeJumped==0)&&(heuristicVal>3))?-3:0;
-        heuristicVal += (canBeMultiJumped==0)?6:0;
-        heuristicVal += (!(canBeMultiJumped==0)&&(heuristicVal>6))?-6:0;
+        heuristicVal -= oursoldierCount==0?100:0;
+        
         return heuristicVal;
     }
     public static boolean is(int x, int y , int[][] squareArray){
@@ -216,40 +202,29 @@ public class SearchTree{
             jPList , Color c)  throws CloneNotSupportedException, NoSuchAlgorithmException{
         Color currentSearchColor = c;
         root.next = null;
-        int alpha,beta,score;
-        tT.hashTable.clear();
+        
         currentTime         = System.currentTimeMillis();
-        //System.out.println("benchmarking started at " + currentTime);
-        int jk=0;
-//        for(int jk=0;jk<5;jk++){
-        while(currentTime+8000 >System.currentTimeMillis()){
-            System.out.println("----------------");
+        int alpha ,beta;
+            
+        for(int jk=0;jk<4;jk++){
+            tT.hashTable.clear();
+            alpha = 5;
+            beta = 30;
             searchNodesNextStep(root, currentSearchColor);
             sortNodes(root);
-            alpha = 10;
-            beta = 70;
-            
-            
-            NextAlphaBeta myNextAB = new NextAlphaBeta(root, currentSearchColor );
-            score = -myNextAB.nextAlphaBeta(root, alpha, beta , jk);
-            if(score<0) score = -score;
-            if( Math.abs(score) < Math.abs(beta) ) {
-                for( int i=1;i<root.next.size();i++ ) {
-                        int lbound = score>alpha?score:alpha ; int ubound = lbound + 1;
-                        int result = -NegaAlphaBeta(root.next.get(i),getDepth(root.next.get(0), 0), -ubound, -lbound);
-                        if( result >= ubound && result < beta ) {
-                           result = -NegaAlphaBeta( root.next.get(i),getDepth(root.next.get(0), 0), -beta, -result);
-                }
-                if( result > score ) score = result;
-                if( result >= beta ) break;
-                    
-                }
+            score = AlphaBeta(root, jk+1,alpha, beta , true);
+            if(score>beta){
+                alpha = score ; beta = Integer.MAX_VALUE;
+                score = AlphaBeta(root, jk+1,alpha, beta , true);
+            }else if(score<=alpha){
+                System.out.println("fail low");
+                alpha = Integer.MIN_VALUE ; beta = score;
+                score = AlphaBeta(root, jk+1,alpha, beta , true);            
             }
-            System.out.println("new it");        
-             jk++;
+            root.value = score;
         }
         bestMovesCalculated = new ArrayList<>();
-        principleVariation(root, true);
+        principleVariation(root, true , score);
         return bestMovesCalculated;        
     }
     public Color toggleColor(Color c){
@@ -308,16 +283,12 @@ public class SearchTree{
         return fooSold;
     }
     public boolean searchNodesNextStep(Node n, Color c) throws CloneNotSupportedException{
-        long ourtime = System.currentTimeMillis()-currentTime;
-        if( ourtime>timeLimit){
-//            System.out.println("returning due to time restrictions");
-            return false;
-        }
             
-            if(n.next!=null)
-                for(Node sd: n.next)
-                    searchNodesNextStep(sd , c); 
-            else{
+            if(n.next!=null){
+                for(Node sd: n.next){
+                    searchNodesNextStep(sd , c);
+                }
+            }else{
                 
                 ArrayList<Soldier> fooSold = setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition);                
                 Color currentTurn = getDepth(n,0)%2==0?Color.RED:Color.BLACK;
@@ -346,12 +317,10 @@ public class SearchTree{
                     Node newNode =  new Node(nextNode, n);
                     
                     /*Oposite turn assignment as values are to be passed on the next node*/
-                    currentTurn = getDepth(n,0)%2==0?Color.BLACK:Color.RED;
-                    newNode.value = heuristicValue(currentTurn, tempSoldAr);                    
-                    max = max<newNode.value? newNode.value:max;
+                    currentTurn = getDepth(n,0)%2==1?Color.BLACK:Color.RED;
+                    newNode.somescore = newNode.value = heuristicValue(currentTurn, tempSoldAr);
                     newNode.previous = n;
-                    if(newNode.value >= max)
-                        n.next.add(newNode);
+                    n.next.add(newNode);
                     
                 }                
             }
@@ -361,24 +330,25 @@ public class SearchTree{
         if(n.next!=null)    for(Node sd: n.next) getBestMoveGrading(sd);
         else                if(n.value >=bestMoveGrading ) bestMoveGrading = n.value;         
     }
-    public void principleVariation(Node n ,boolean max){   
+    public void principleVariation(Node n ,boolean max , int value){   
+        
         if(n.next!=null && n.next.size()>0){
             if(max){
-                int maxUtil = Integer.MIN_VALUE;
+                int threshold = Integer.MIN_VALUE;
                 for(Node sd: n.next)
-                  if(maxUtil<=sd.value)  
-                      maxUtil = sd.value;
+                    if(sd.value>= threshold)
+                        threshold = sd.value;
                 for(Node sd: n.next)
-                    if(sd.value>= maxUtil-tolerance )
-                        principleVariation(sd,false);
+                    if(sd.value>= threshold)
+                        principleVariation(sd,false , value);
             }else{
-                int minUtil = Integer.MAX_VALUE;
+                int threshold = Integer.MAX_VALUE;
                 for(Node sd: n.next)
-                  if(minUtil>=sd.value)  
-                      minUtil = sd.value;
+                    if(sd.value<= threshold)
+                        threshold = sd.value;
                 for(Node sd: n.next)
-                    if(sd.value<=minUtil+tolerance)
-                        principleVariation(sd,true);
+                    if(sd.value<=threshold)
+                        principleVariation(sd,true , value);
             }
         
         }
@@ -386,145 +356,135 @@ public class SearchTree{
             bestMovesCalculated.add(n.jP);
     }
 
-    public int NegaAlphaBeta(Node n, int depth, int alpha, int beta) throws CloneNotSupportedException, NoSuchAlgorithmException{
+    public int AlphaBeta(Node n, int depth, int alpha, int beta , boolean maxPlay) throws CloneNotSupportedException, NoSuchAlgorithmException{
         long ourtime = System.currentTimeMillis()-currentTime;
-        if( ourtime>timeLimit){
-//            System.out.println("returning due to time restrictions");
-            return n.value;
-        }
-        int score;
-        int dd = getDepth(n, 0);
-        int thise=232;
-        if(n.next!=null && depth>0){
-            score = Integer.MIN_VALUE;
-            
-            /* Multicut part of the nega alpha beta*/
+        if(n.next!=null  && n.next.size()>0  && depth>0){         
+            /* Multicut part of the alpha beta*/
             int c=0;
-            for(int il=0;il<n.next.size();il++){
-                Node sd = n.next.get(il);
-                int value = NegaAlphaBeta(sd, -beta, -alpha, depth-1);
-                if(Math.abs(value) <= Math.abs(beta)){
+            for(int il=0;il<1;il++){
+                Node sd = n.next.get(il);                
+                if(n.previous!=null && getDepth(n, 0)%2==0){
+                    if(checkNullMove(setupSoldiersGivenJumpPosition(solList, n.previous.jP.jumpPosition) , n.previous.value)){                    
+                        while (n.next.size()>il+1)
+                            n.next.remove(il+1);
+                        break;
+                    }
+                }
+                
+                int value = AlphaBeta(sd, 2,alpha, beta,!maxPlay);
+                if(value >= beta){
                   c++;
                   if(c >= multiCutTolerance){
-                    while (n.next.size()>il+1)    n.next.remove(il+1);
-                    return beta;
+                    while (n.next.size()>il+1)
+                        n.next.remove(il+1);
+                    break;
                   }
                 }
-                if(isZugZwag(setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition) , n.value)){                    
-                    searchNodesNextStep(n, Color.RED);
-                    sortNodes(n);
-                }
+                
             }
             
             
             for(int il=0;il<n.next.size();il++){
+                
+                
                 /* Transposition table of nega alpha beta*/
                 Node sd = n.next.get(il);
                 /*Iterate through the hash table first*/
                 /*If we have a winning position, noneed to search any other nodes*/
-                if(sd.value>100){ 
-                    while (n.next.size()>il+1)    n.next.remove(il+1);
-                    return sd.value;              
-                }
                 ArrayList<Soldier> fooSold  = setupSoldiersGivenJumpPosition(solList, sd.jP.jumpPosition);
+                if(fooSold.size()>14) break;
                 
                 boolean hash_hit = tT.hashTable.containsKey(gethashvalue(fooSold));
                 tableData tD     = tT.hashTable.get(gethashvalue(fooSold));
-                if(hash_hit && tD.depth>getDepth(sd, 0)){
-                    int actualValue = tD.value<0?-tD.value:tD.value;
-                    if(tD.value < beta+tolerance){
-                        while (n.next.size()>il+1)    n.next.remove(il+1);
-                        return tD.value;
-                    }
+                int dpth = getDepth(sd, 0);
+                if(hash_hit && tD.depth>dpth && tD.depth%2==dpth%2){
                   switch(tD.valuetype){
                   case LOWER_BOUND:
-                     
-                     int value = alpha<0?-actualValue:actualValue;
-                     if(alpha>0){
-                        if(alpha<value){
-                        alpha= alpha<0?-actualValue:actualValue;
-                        }
-                     }else if(alpha>value){
-                        alpha= alpha<0?-actualValue:actualValue;
-                        }
+                     if(alpha<tD.value)
+                         alpha = tD.value;
                     break;
                   case UPPER_BOUND:
-                    value = beta<0?-actualValue:actualValue;
-                    if(beta>0){
-                        if(beta>value){
-                            beta= beta<0?-actualValue:actualValue;
-                        }
-                    }else{
-                        if(beta<value){
-                            beta= beta<0?-actualValue:actualValue;
-                        }
-                    }
+                    if(beta> tD.value)
+                        beta = tD.value;
                     break;
                   case REAL:
                      while (n.next.size()>il+1)    n.next.remove(il+1); 
-                    return actualValue;
-                      
+                     return tD.value;
                   }
-                  if(Math.abs(alpha)>=Math.abs(beta)){
+                  if(alpha>=beta){
                       while (n.next.size()>il+1)    n.next.remove(il+1); 
-                      return tD.value<0?-tD.value:tD.value;
+                      return getDepth(sd, 0)%2==0?alpha:beta;
                     }
                 }
+            }
                 /*Iterate through the hash table first*/
                 
                 /* Regular nega alpha beta */
-                n.value = -NegaAlphaBeta(sd , depth-1, -beta, -alpha);
-                if(n.value>score) {
-                    score = n.value;
+                Node sd;
+                if(maxPlay){
+                    for(int ila=0;ila<n.next.size();ila++){
+                        sd = n.next.get(ila);
+                        int val = AlphaBeta(sd , depth-1, alpha, beta, false);
+                        alpha = alpha>val?alpha:val;
+                        if(beta<=alpha){
+                            while (n.next.size()>ila+1)
+                                n.next.remove(ila+1);
+                            break;
+                        }
+                    }
+                    n.value = alpha;
+                    int currentDepth = getDepth(n,0);
+                    caseType cT = caseType.REAL;
+                    ArrayList<Soldier> fooSold            = setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition);
+                    if(n.value>beta) cT                     = caseType.LOWER_BOUND;
+                    else if(n.value<=alpha) cT               = caseType.UPPER_BOUND;
+                    else if(n.value>beta && n.value<alpha) cT = caseType.REAL;
+                    tableData tD = new tableData(n.value, cT, currentDepth , false);
+                    tT.hashTable.put(gethashvalue(fooSold),tD);
+                    return alpha;
+                }else{
+                    for(int ila=0;ila<n.next.size();ila++){
+                        sd = n.next.get(ila);
+                        int val = AlphaBeta(sd , depth-1, alpha, beta, true);
+                        beta = beta<val?beta:val;
+                        if(beta<=alpha){
+                            while (n.next.size()>ila+1)
+                                n.next.remove(ila+1);
+                            break;
+                        }
+                    }
+                    n.value = beta;
+                    int currentDepth = getDepth(n,0);
+                    caseType cT = caseType.REAL;
+                    ArrayList<Soldier> fooSold            = setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition);
+                    if(n.value>beta) cT                     = caseType.LOWER_BOUND;
+                    else if(n.value<=alpha) cT               = caseType.UPPER_BOUND;
+                    else if(n.value>beta && n.value<alpha) cT = caseType.REAL;
+                    tableData tD = new tableData(n.value, cT, currentDepth , false);
+                    tT.hashTable.put(gethashvalue(fooSold),tD);
+                    return beta;
                 }
-                if(score>alpha){
-                    alpha = score; 
-                }
-                if(n.value<0) n.value = -n.value;
-                
-                if(Math.abs(score)>=Math.abs(beta)) {
-                    while (n.next.size()>il+1)    n.next.remove(il+1); 
-                }
-            }
+            
         }
         else{
             /* Hash table insertions*/
             Color currentTurn = getDepth(n,0)%2==0?Color.RED:Color.BLACK;
-            caseType cT=  TranspTable.caseType.LOWER_BOUND;
-            int value =heuristicValue(currentTurn, setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition));
+            n.value =heuristicValue(currentTurn, setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition));
+            n.somescore = n.value;
+            
             /*variable depth*/
-            boolean goodEnough=false;            
+            boolean goodEnough=false;
             if(currentTurn.equals(Color.red)){
                 if(isGoodEnough(Color.red, setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition))){                    
                     searchNodesNextStep(n, Color.BLACK);
-                    sortNodes(n);
                     if(getDepth(n, 0)<3)
-                        NegaAlphaBeta(n , 1, -beta, -alpha);
-                }
-            }else{
-                if(isZugZwag(setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition) , n.value)){                    
-                    searchNodesNextStep(n, Color.RED);
-                    sortNodes(n);
-                    if(getDepth(n, 0)<3)
-                        NegaAlphaBeta(n , 1, -beta, -alpha);
+                        AlphaBeta(n , 1, alpha, beta, false);
                 }
             }
             
-            
-            int currentDepth = getDepth(n,0);
-            
-            ArrayList<Soldier> fooSold            = setupSoldiersGivenJumpPosition(solList, n.jP.jumpPosition);
-            if(value>beta) cT                     = caseType.LOWER_BOUND;
-            else if(value<alpha) cT               = caseType.UPPER_BOUND;
-            else if(value>beta && value<alpha) cT = caseType.REAL;
-            tableData tD = new tableData(value, cT, currentDepth , goodEnough);
-            tT.hashTable.put(gethashvalue(fooSold),tD);
-            
-            
             /* value return as normal */
-            return value;
+            return n.value;
         }
-        return score;
     }
     public String gethashvalue(ArrayList<Soldier> sL) throws NoSuchAlgorithmException{
         int hashvalue=0;
@@ -532,7 +492,7 @@ public class SearchTree{
             Soldier sol = sL.get(i);
             String str = sol.C.equals(Color.BLACK)?"0":"1";
             String val = sol.i +  "" + sol.j + "" + str;
-            int newXorVal = Integer.parseInt(val)*i;
+            int newXorVal = Integer.parseInt(val);
             hashvalue += newXorVal;
         }
         String plaintext = Integer.toString(hashvalue);
@@ -555,40 +515,17 @@ public class SearchTree{
         return foo;
     }
     public void sortNodes(Node n){
-        if(n.next!=null){
+        if(n.next!=null ){
             Collections.sort(n.next, new Comparator<Node>() {
                 @Override
                 public int compare(Node o1, Node o2) {
-                    return o2.value-o1.value;
+                    return o1.value-o2.value;
                 }
             });
-            for(Node sd: n.next) sortNodes(sd);
+            for(Node sd:n.next)  sortNodes(sd);
         }
     }
-      public class NextStep extends Thread {
-          Node n;
-          Color c;
-          public NextStep(Node n , Color color){
-              this.n = n;
-              this.c = color;
-          }
-        public void run(){
-              try {
-                  searchNodesNextStep(n, c);
-                  sortNodes(n);
-              } catch (CloneNotSupportedException ex) {
-                  Logger.getLogger(SearchTree.class.getName()).log(Level.SEVERE, null, ex);
-              }
-        }
-        public void nextStep(){
-            try {
-                  searchNodesNextStep(n, c);
-                  sortNodes(root);
-              } catch (CloneNotSupportedException ex) {
-                  Logger.getLogger(SearchTree.class.getName()).log(Level.SEVERE, null, ex);
-              }
-        }
-  }
+  
       public class NextAlphaBeta extends Thread {
           Node n;
           Color c;
@@ -597,7 +534,7 @@ public class SearchTree{
               this.c = color;
           }
         public int nextAlphaBeta(Node n , int alpha, int beta , int d) throws CloneNotSupportedException, NoSuchAlgorithmException{
-            return NegaAlphaBeta( n,d+1, -beta, -alpha);
+            return AlphaBeta( n,d+1, alpha, beta, true);
         }
   }
 }

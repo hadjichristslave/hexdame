@@ -20,14 +20,6 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
  
-/**********************************
-  This is the main class of a Java program to play a game based on hexagonal tiles.
-  The mechanism of handling hexes is in the file hexmech.java.
- 
-  Written by: M.H.
-  Date: December 2012
- 
- ***********************************/
  
 public class hexgame
 {
@@ -35,6 +27,7 @@ public class hexgame
     PanelRules pr;
     enum turn {RED, BLACK};
     public turn CurrentTurn;
+    public boolean playFirst =false;
     ArrayList moves = new ArrayList<Point>();
     Point currentSelection = new Point();
     int moveCounter    = 0;
@@ -105,7 +98,6 @@ public class hexgame
 
                      @Override
                      public void keyTyped(KeyEvent e) {
-                         //System.out.println("adfafadfda------>" + e.getKeyChar());
                          if(Integer.parseInt(Character.toString(e.getKeyChar()))<conflictListSolve.size()){
                             try
                             {
@@ -125,7 +117,6 @@ public class hexgame
                                         while(jPP.jumpPosition.get(toIndex).from.x==Integer.MAX_VALUE){
                                             toIndex--;
                                         }
-                                        System.out.println("got in here my index is " + toIndex);
                                         p.i = jPP.jumpPosition.get(toIndex).to.x;
                                         p.j = jPP.jumpPosition.get(toIndex).to.y;                                        
                                     }
@@ -175,15 +166,28 @@ public class hexgame
             pr = new PanelRules(gamePiecesr);
         }
         public void playFirst(){
-            Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
-            
-            updateTurn();
-            try {
-                    playAMove(colorTurn , getLegalMoves(colorTurn));
-                } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException | NoSuchAlgorithmException ex) {
-                    Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
-                }
+            //Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
+            gamePiecesr.clear();
+//            Soldier sol = new Soldier(6, 2, Color.black);
+//            gamePiecesr.add(sol);
+            Soldier sol = new Soldier(7, 1, Color.black);
+            gamePiecesr.add(sol);
+            sol = new Soldier(7, 6, Color.red);
+            gamePiecesr.add(sol);
+//            sol = new Soldier(2, 1, Color.black);
+//            gamePiecesr.add(sol);
+//            sol = new Soldier(6, 5, Color.red);
+//            gamePiecesr.add(sol);
             pr = new PanelRules(gamePiecesr);
+//            playFirst = true;
+//            updateTurn();
+//            try {
+//                    playAMove(colorTurn , getLegalMoves(colorTurn));
+//                } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException | NoSuchAlgorithmException ex) {
+//                    Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+            
+            
         }
         
         
@@ -230,23 +234,33 @@ public class hexgame
                                         Soldier Sold2 = new Soldier(i , j , Color.red);
                                         if(pr.containsSoldier(Sold1, gamePiecesr)){
                                             hexmech.fillcircle(i,j,g2,Sold1.C);
+                                            if(playFirst &&Sold1.C.equals(Color.BLACK))
+                                                hexmech.fillcircle(i,j,g2,Color.RED);
                                             boolean isKing = false;
                                             for(Soldier gr:gamePiecesr){
                                                 if(gr.i == Sold1.i && gr.j==Sold1.j && gr.isKing==true)
                                                     isKing=true;
                                             }
-                                            if(isKing)
+                                            if(isKing){
                                                 hexmech.fillcircle(i,j,g2,Color.red ,20, 20);
+                                                if(playFirst)
+                                                    hexmech.fillcircle(i,j,g2,Color.black ,20, 20);
+                                            }
                                         }
                                         else if((pr.containsSoldier(Sold2, gamePiecesr))){
                                             hexmech.fillcircle(i,j,g2,Sold2.C); 
+                                            if(playFirst && Sold2.C.equals(Color.RED))
+                                                hexmech.fillcircle(i,j,g2,Color.BLACK);
                                             boolean isKing   = false;
                                             for(Soldier gr:gamePiecesr){
                                                 if(gr.i == Sold2.i && gr.j==Sold2.j && gr.isKing==true)
                                                     isKing=true;
                                             }
-                                            if(isKing)
+                                            if(isKing){
                                                 hexmech.fillcircle(i,j,g2,Color.black ,20, 20);
+                                                if(playFirst)
+                                                    hexmech.fillcircle(i,j,g2,Color.red ,20, 20);
+                                            }
                                         }
                                     }
                        // Draw Legal Moves
@@ -257,7 +271,6 @@ public class hexgame
                         // Draw Jumps
                         for(Iterator<Point> m=moves.iterator(); m.hasNext(); ){
                             Point temp = m.next();
-                            //System.out.println("Will fill" + temp.toString());
                             hexmech.fillHex(temp.x,temp.y,-15,g2 ,"");
                         }
                         for(Soldier sold:captureSoldierPositionAndColor )
@@ -284,19 +297,6 @@ public class hexgame
                 
  
 		class MyMouseListener extends MouseAdapter  {	//inner class inside DrawingPanel 
-//                        @Override
-//                        public void mouseEntered(MouseEvent e) {
-//                            try {
-//                                    Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
-//                                    Color invTurn = CurrentTurn==CurrentTurn.BLACK?Color.RED:Color.BLACK;
-//                                    playAMove(colorTurn , getLegalMoves(colorTurn));
-//                                    repaint();
-//                                    playAMove(invTurn, getLegalMoves(invTurn));
-//                                    repaint();
-//                            } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException | NoSuchAlgorithmException ex) {
-//                                Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
-//                            }
-//                        }
                         @Override
                         public void mouseClicked(MouseEvent e ) {
                             possibleConflictMove = false;
@@ -571,19 +571,30 @@ public class hexgame
         public void playAMove(Color colorTurn, ArrayList<JumpPosition> availableMoves) throws CloneNotSupportedException, NoSuchAlgorithmException{
             
             SearchTree sT = new SearchTree(gamePiecesr);
+            JumpPosition startingMove;
             
-            for(JumpPosition jP:availableMoves){
-                jP.jumpPosition.get(0).from.x = 0;
-                jP.jumpPosition.get(0).from.y = 0;
-                jP.jumpPosition.get(0).to.x = 0;
-                jP.jumpPosition.get(0).to.y = 0;
-                jP.jumpPosition.get(0).jumps.x = 0;
-                jP.jumpPosition.get(0).jumps.y = 0;
+            if(availableMoves.size()>0){
+                for(JumpPosition jP:availableMoves){
+                    jP.jumpPosition.get(0).from.x = 0;
+                    jP.jumpPosition.get(0).from.y = 0;
+                    jP.jumpPosition.get(0).to.x = 0;
+                    jP.jumpPosition.get(0).to.y = 0;
+                    jP.jumpPosition.get(0).jumps.x = 0;
+                    jP.jumpPosition.get(0).jumps.y = 0;
+                }
+                while(availableMoves.get(0).jumpPosition.size()>1)
+                    availableMoves.get(0).jumpPosition.remove(1);
+                startingMove = availableMoves.get(0);
+            }else{
+                ArrayList<SearchNode> as = new ArrayList<>();
+                Point nullPoint = new Point(0,0);
+                SearchNode sd = new SearchNode(nullPoint,nullPoint,nullPoint);
+                as.add(sd);
+                JumpPosition oi = new JumpPosition(as);
+                startingMove = oi;
             }
-            while(availableMoves.get(0).jumpPosition.size()>1)
-                availableMoves.get(0).jumpPosition.remove(1);
+            
             //Addming the first move only all other first moves, redundand.
-            JumpPosition startingMove = availableMoves.get(0);
             sT.root.jP = startingMove;
             ArrayList<JumpPosition> getMoves = sT.initializeAndSearchTree(availableMoves , colorTurn);
             
@@ -599,7 +610,6 @@ public class hexgame
                     getMoves.get(move).jumpPosition.get(index).from.y , oposite),gamePiecesr )){        
                 index++;
             }
-            //System.out.println(index);
             
             Point from  = getMoves.get(move).jumpPosition.get(index).from;
             Point to    = new Point();

@@ -93,8 +93,6 @@ public class PanelRules {
         public boolean containsSoldier(Soldier test, ArrayList<Soldier> gamePiece , boolean foo){
             for (int i=0;i<gamePiece.size();i++){
                 if(test.i == gamePiece.get(i).i && test.j == gamePiece.get(i).j && test.C.equals(gamePiece.get(i).C)){
-                    //System.out.println(test.C.toString());
-                    //System.out.println(gamePiece.get(i).C.toString());
                     return true;
                 }
             }
@@ -430,7 +428,6 @@ public class PanelRules {
                     int removeIndex = getFirstAvailableIndex();
                     int currentSize = tempSearchNode.size();
                      // Make a new DFS with the path as input
-                    //System.out.println("New iteration in dfs");
                     for(OrientationMove orM:orientationMoveCombs)
                         dFSJumps(c,orM.or, orM.m, jumpPositions,false);
                     //Check if the size of the search tree has gotten bigger

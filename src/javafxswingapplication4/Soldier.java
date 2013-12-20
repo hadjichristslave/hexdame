@@ -19,6 +19,7 @@ public class Soldier implements Cloneable {
      public int drawRadius;
      public Point jumpsTo;
      public Point jumpsFrom;
+     public String playFirst = "no";
      
     public Soldier(int i , int j , Color c){
         this.i = i;

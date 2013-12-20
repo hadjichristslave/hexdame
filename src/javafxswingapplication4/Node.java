@@ -18,6 +18,7 @@ public class Node implements Comparator<Node> {
     ArrayList<Node> next;
     Node previous;
     int value=Integer.MIN_VALUE;
+    int somescore;
 
     public Node () { 
         jP = new JumpPosition();
