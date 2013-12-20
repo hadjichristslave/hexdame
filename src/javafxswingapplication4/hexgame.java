@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package javafxswingapplication4;
 
 /**
@@ -69,8 +65,8 @@ public class hexgame
  
 	void initGame(){
                 CurrentTurn = turn.BLACK;
-		hexmech.setXYasVertex(false); //RECOMMENDED: leave this as FALSE. 
-		hexmech.setHeight(HEXSIZE); //Either setHeight or setSize must be run to initialize the hex
+		hexmech.setXYasVertex(false); 
+		hexmech.setHeight(HEXSIZE); 
 		hexmech.setBorders(BORDERS);
  
 		for (int i=0;i<BSIZE;i++) {
@@ -87,9 +83,6 @@ public class hexgame
 		frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
                 Container content = frame.getContentPane();
                 content.add(panel);
-                                
-		//this.add(panel);  -- cannot be done in a static context
-		//for hexes in the FLAT orientation, the height of a 10x10 grid is 1.1764 * the width. (from h / (s+t))
 		frame.setSize( (int)(SCRSIZE/1.23), SCRSIZE+100);
 		frame.setResizable(false);
 		frame.setLocationRelativeTo( null );
@@ -166,26 +159,15 @@ public class hexgame
             pr = new PanelRules(gamePiecesr);
         }
         public void playFirst(){
-            //Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
-            gamePiecesr.clear();
-//            Soldier sol = new Soldier(6, 2, Color.black);
-//            gamePiecesr.add(sol);
-            Soldier sol = new Soldier(7, 1, Color.black);
-            gamePiecesr.add(sol);
-            sol = new Soldier(7, 6, Color.red);
-            gamePiecesr.add(sol);
-//            sol = new Soldier(2, 1, Color.black);
-//            gamePiecesr.add(sol);
-//            sol = new Soldier(6, 5, Color.red);
-//            gamePiecesr.add(sol);
+            Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
             pr = new PanelRules(gamePiecesr);
-//            playFirst = true;
-//            updateTurn();
-//            try {
-//                    playAMove(colorTurn , getLegalMoves(colorTurn));
-//                } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException | NoSuchAlgorithmException ex) {
-//                    Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
-//                }
+            playFirst = true;
+            updateTurn();
+            try {
+                playAMove(colorTurn , getLegalMoves(colorTurn));
+            } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException | NoSuchAlgorithmException ex) {
+                Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
+            }
             
             
         }
@@ -197,9 +179,6 @@ public class hexgame
             public int deleteY = 0;
             public int drawX   = 0;
             public int drawY   = 0;
-                
-		//mouse variables here
-		//Point mPt = new Point(0,0);
  
 		public DrawingPanel()
 		{
@@ -305,11 +284,6 @@ public class hexgame
                             Point p = new Point( hexmech.pxtoHex(e.getX(),e.getY()) );                            
                             Color colorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
                             Color invcolorTurn = CurrentTurn==CurrentTurn.BLACK?Color.black:Color.red;
-//                            try {
-//                                getLegalMoves(colorTurn);
-//                            } catch (CloneNotSupportedException | FileNotFoundException | UnsupportedEncodingException ex) {
-//                                Logger.getLogger(hexgame.class.getName()).log(Level.SEVERE, null, ex);
-//                            }
                             
                             ArrayList<JumpPosition> listOfAllJumps;
                             if(pr.containsSoldier(new Soldier(p.x, p.y, colorTurn) , gamePiecesr) && PanelRules.isValidSquare(p.x, p.y)){
