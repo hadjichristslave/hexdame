@@ -20,6 +20,6 @@ public class SearchNode{
             this.jumps = jumps;
         }
         public void print(){
-            System.out.println(this.from.toString() +  " "  +this.to.toString() + " " +this.jumps.toString() );
+            System.out.println(this.from.toString() +  "  "  +this.to.toString() + " " +this.jumps.toString() );
         }
     }
